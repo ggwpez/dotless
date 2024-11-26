@@ -1,0 +1,7 @@
+type EraPaid @entity {
+  id: ID!
+  blockNumber: Int! @index
+  timestamp: DateTime! @index
+  amountPaid: BigInt!
+  totalIssuance: BigInt!
+}
