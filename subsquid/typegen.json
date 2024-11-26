@@ -1,0 +1,22 @@
+{
+  "outDir": "src/types",
+  "specVersions": "https://v2.archive.subsquid.io/metadata/polkadot",
+  "pallets": {
+    "Balances": {
+      "events": [],
+      "calls": [],
+      "storage": [
+        "TotalIssuance"
+      ],
+      "constants": []
+    },
+    "Staking": {
+      "events": [
+        "EraPaid"
+      ],
+      "calls": [],
+      "storage": [],
+      "constants": []
+    }
+  }
+}
