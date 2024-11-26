@@ -13,6 +13,7 @@ processor.run(new TypeormDatabase({ supportHotBlocks: true }), async (ctx) => {
     await ctx.store.save(pays)
 })
 
+// Extract all Staking::EraPaid events and record them in the Database.
 async function getPays(ctx: ProcessorContext<Store>): Promise<EraPaid[]> {
     let pays: EraPaid[] = []
 
