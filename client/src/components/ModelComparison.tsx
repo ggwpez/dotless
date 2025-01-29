@@ -311,17 +311,6 @@ export default function ModelComparison() {
               dot={false}
               filter="url(#glow)"
             />
-            <Area
-              yAxisId="issuance"
-              type="monotone"
-              dataKey={(data: {
-                legacyIssuance: number;
-                currentIssuance: number;
-              }) => data.legacyIssuance - data.currentIssuance}
-              name="Cumulative Saved"
-              fill="#FF267020"
-              stroke="none"
-            />
           </LineChart>
         </ResponsiveContainer>
       </Card>
