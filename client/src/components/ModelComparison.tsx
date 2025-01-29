@@ -14,8 +14,50 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import { format, differenceInDays, parseISO } from "date-fns";
+import { format, differenceInDays, parseISO, addDays } from "date-fns";
 import { Skeleton } from "./ui/skeleton";
+
+const generateProjectionData = (
+  historicalData: Array<{
+    timestamp: string;
+    currentInflation: number;
+    currentIssuance: number;
+    legacyInflation: number;
+    legacyIssuance: number;
+    tooltipDate: string;
+    isProjected: boolean,
+  }>,
+  projectionDays: number = 365 * 2, // 2 years
+  yearlyIssuance: number = 120_000_000 // 120M DOT per year
+) => {
+  const dailyIssuance = yearlyIssuance / 365.25;
+  let projectedData = [...historicalData];
+
+  for (let i = 1; i <= projectionDays; i++) {
+    const prevDay = projectedData[projectedData.length - 1];
+    const projectedDate = addDays(new Date(prevDay.timestamp), 1);
+
+    // Current model (linear issuance)
+    const newCurrentIssuance = prevDay.currentIssuance + dailyIssuance;
+    const currentInflation = (dailyIssuance * 365.25 / newCurrentIssuance) * 100;
+
+    // Legacy model (10% exponential)
+    const legacyDailyIncrease = (prevDay.legacyIssuance * (0.1 / 365.25));
+    const newLegacyIssuance = prevDay.legacyIssuance + legacyDailyIncrease;
+
+    projectedData.push({
+      timestamp: projectedDate.toISOString(),
+      currentInflation,
+      currentIssuance: newCurrentIssuance,
+      legacyInflation: 10,
+      legacyIssuance: newLegacyIssuance,
+      tooltipDate: format(projectedDate, "MMM d, yyyy HH:mm"),
+      isProjected: true,
+    });
+  }
+
+  return projectedData;
+};
 
 export default function ModelComparison() {
   const { loading, error, data } = useQuery<{ eraPaids: EraPaidEvent[] }>(
@@ -53,7 +95,7 @@ export default function ModelComparison() {
   // Cum difference between legacy and current
   var cumDifference = Number(0);
 
-  const chartData =
+  const historicalData =
     data?.eraPaids.map((event) => {
       const daysSinceStart = differenceInDays(
         parseISO(event.timestamp),
@@ -84,8 +126,12 @@ export default function ModelComparison() {
         legacyInflation,
         legacyIssuance,
         tooltipDate: format(new Date(event.timestamp), "MMM d, yyyy HH:mm"),
+        isProjected: false,
       };
     }) || [];
+
+  // Combine historical and projection data
+  const chartData = generateProjectionData(historicalData);
 
   const latestData = chartData[chartData.length - 1];
   const savedAmount = latestData
