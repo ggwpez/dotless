@@ -137,11 +137,12 @@ export default function ModelComparison() {
   // Combine historical and projection data
   const chartData = generateProjectionData(historicalData);
 
-  const latestData = chartData[chartData.length - 1];
-  const savedAmount = latestData
-    ? latestData.legacyIssuance - latestData.currentIssuance
+  // Calculate saved amount using only historical data
+  const latestHistoricalData = historicalData[historicalData.length - 1];
+  const savedAmount = latestHistoricalData
+    ? latestHistoricalData.legacyIssuance - latestHistoricalData.currentIssuance
     : 0;
-  const latestCurrentIssuance = latestData?.currentIssuance || 1; // Prevent division by zero
+  const latestCurrentIssuance = latestHistoricalData?.currentIssuance || 1; // Prevent division by zero
 
   const minIssuance = Math.min(
     ...chartData.map((d) => Math.min(d.currentIssuance, d.legacyIssuance)),
