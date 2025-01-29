@@ -16,6 +16,8 @@ import {
 } from "recharts";
 import { format, differenceInDays, parseISO, addDays } from "date-fns";
 import { Skeleton } from "./ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { useState } from "react";
 
 const generateProjectionData = (
   historicalData: Array<{
@@ -27,7 +29,7 @@ const generateProjectionData = (
     tooltipDate: string;
     isProjected: boolean,
   }>,
-  projectionDays: number = 365 * 5, // 10 years
+  projectionDays: number = 365.25 * 5,
   yearlyIssuance: number = 120_000_000 // 120M DOT per year
 ) => {
   const dailyIssuance = yearlyIssuance / 365.25;
@@ -64,6 +66,8 @@ const generateProjectionData = (
 };
 
 export default function ModelComparison() {
+  const [projectionYears, setProjectionYears] = useState(2);
+
   const { loading, error, data } = useQuery<{ eraPaids: EraPaidEvent[] }>(
     GET_ERA_PAID_EVENTS,
   );
@@ -133,7 +137,11 @@ export default function ModelComparison() {
     }) || [];
 
   // Combine historical and projection data
-  const chartData = generateProjectionData(historicalData);
+  const chartData = generateProjectionData(
+    historicalData,
+    projectionYears * 365, // Convert years to days
+    120_000_000
+  );
 
   // Calculate saved amount using only historical data
   const latestHistoricalData = historicalData[historicalData.length - 1];
@@ -160,8 +168,35 @@ export default function ModelComparison() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <h2 className="text-2xl font-bold">Model Comparison over the next 5 years</h2>
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-2xl font-bold">
+          Model Comparison over the next {projectionYears} years
+        </h2>
+        <ToggleGroup 
+          type="single" 
+          value={projectionYears.toString()}
+          onValueChange={(value) => setProjectionYears(Number(value))}
+          className="bg-black/50 border border-neon-pink/20 rounded-lg p-1"
+        >
+          <ToggleGroupItem 
+            value="2" 
+            className="px-3 py-1 data-[state=on]:bg-neon-pink/20 rounded"
+          >
+            2 Years
+          </ToggleGroupItem>
+          <ToggleGroupItem 
+            value="5" 
+            className="px-3 py-1 data-[state=on]:bg-neon-pink/20 rounded"
+          >
+            5 Years
+          </ToggleGroupItem>
+          <ToggleGroupItem 
+            value="10" 
+            className="px-3 py-1 data-[state=on]:bg-neon-pink/20 rounded"
+          >
+            10 Years
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       <Card className="p-4 bg-black/80 border border-neon-pink/50 shadow-[0_0_15px_rgba(230,0,122,0.3)] relative overflow-hidden group transition-all duration-300 hover:shadow-[0_0_30px_rgba(230,0,122,0.5)]">
