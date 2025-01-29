@@ -66,7 +66,7 @@ const generateProjectionData = (
 };
 
 export default function ModelComparison() {
-  const [projectionYears, setProjectionYears] = useState(2);
+  const [projectionYears, setProjectionYears] = useState(5);
 
   const { loading, error, data } = useQuery<{ eraPaids: EraPaidEvent[] }>(
     GET_ERA_PAID_EVENTS,
@@ -176,7 +176,7 @@ export default function ModelComparison() {
           type="single" 
           value={projectionYears.toString()}
           onValueChange={(value) => value && setProjectionYears(Number(value))}
-          defaultValue="2"
+          defaultValue="5"
           className="bg-black/50 border border-neon-pink/20 rounded-lg p-1"
         >
           <ToggleGroupItem 
