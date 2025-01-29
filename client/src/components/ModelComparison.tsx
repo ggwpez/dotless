@@ -175,7 +175,8 @@ export default function ModelComparison() {
         <ToggleGroup 
           type="single" 
           value={projectionYears.toString()}
-          onValueChange={(value) => setProjectionYears(Number(value))}
+          onValueChange={(value) => value && setProjectionYears(Number(value))}
+          defaultValue="2"
           className="bg-black/50 border border-neon-pink/20 rounded-lg p-1"
         >
           <ToggleGroupItem 
