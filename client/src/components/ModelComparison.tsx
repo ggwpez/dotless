@@ -27,7 +27,7 @@ const generateProjectionData = (
     tooltipDate: string;
     isProjected: boolean,
   }>,
-  projectionDays: number = 365 * 25, // 10 years
+  projectionDays: number = 365 * 5, // 10 years
   yearlyIssuance: number = 120_000_000 // 120M DOT per year
 ) => {
   const dailyIssuance = yearlyIssuance / 365.25;
@@ -163,7 +163,7 @@ export default function ModelComparison() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <h2 className="text-2xl font-bold">Model Comparison</h2>
+        <h2 className="text-2xl font-bold">Model Comparison over the next 5 years</h2>
       </div>
 
       <Card className="p-4 bg-black/80 border border-neon-pink/50 shadow-[0_0_15px_rgba(230,0,122,0.3)] relative overflow-hidden group transition-all duration-300 hover:shadow-[0_0_30px_rgba(230,0,122,0.5)]">
