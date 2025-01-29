@@ -27,7 +27,7 @@ const generateProjectionData = (
     tooltipDate: string;
     isProjected: boolean,
   }>,
-  projectionDays: number = 365 * 2, // 2 years
+  projectionDays: number = 365 * 25, // 10 years
   yearlyIssuance: number = 120_000_000 // 120M DOT per year
 ) => {
   const dailyIssuance = yearlyIssuance / 365.25;
@@ -56,7 +56,11 @@ const generateProjectionData = (
     });
   }
 
-  return projectedData;
+  // Every 10th to make UI faster
+  return [
+    ...projectedData
+      .filter((_, index) => index % 30 === 0)
+  ];
 };
 
 export default function ModelComparison() {
