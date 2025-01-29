@@ -77,16 +77,14 @@ export default function ModelComparison() {
     if (!data || data.length < 2) return "MMM d, yyyy";
 
     // Calculate average time difference between points
-    const avgTimeDiff =
-      data.reduce((sum: number, point: { timestamp: string }, i: number) => {
-        if (i === 0) return sum;
-        const diff = differenceInDays(
-          new Date(point.timestamp),
-          new Date(data[i - 1].timestamp),
-        );
-        return sum + diff;
-      }, 0) /
-      (data.length - 1);
+    const avgTimeDiff = data.reduce((sum: number, point: { timestamp: string }, i: number) => {
+      if (i === 0) return sum;
+      const diff = differenceInDays(
+        new Date(point.timestamp),
+        new Date(data[i - 1].timestamp)
+      );
+      return sum + diff;
+    }, 0) / (data.length - 1);
 
     // Choose format based on average difference
     if (avgTimeDiff <= 7) return "MMM d"; // Within a week
@@ -189,9 +187,7 @@ export default function ModelComparison() {
               dataKey="timestamp"
               stroke="#ffffff"
               tick={{ fill: "#ffffff" }}
-              tickFormatter={(value) =>
-                format(new Date(value), getDateFormat(chartData))
-              }
+              tickFormatter={(value) => format(new Date(value), "MMM yyyy")}
             />
             <YAxis
               yAxisId="rate"
@@ -229,13 +225,9 @@ export default function ModelComparison() {
                 boxShadow: "0 0 10px rgba(230,0,122,0.3)",
                 color: "#ffffff",
               }}
-              labelFormatter={(value) =>
-                format(new Date(value), getDateFormat(chartData))
-              }
+              labelFormatter={(value) => format(new Date(value), "MMM d, yyyy HH:mm")}
               formatter={(value: number, name: string) => [
-                name.includes("Supply")
-                  ? `${formatNumber(value)} DOT`
-                  : value.toFixed(3) + "%",
+                name.includes("Supply") ? `${formatNumber(value)} DOT` : value.toFixed(3) + "%",
                 name,
               ]}
             />
