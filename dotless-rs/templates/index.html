@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polkadot Issuance Model</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="block-indicator">
+            <span class="pulse-dot"></span>
+            <span id="block-number">Connecting...</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="title">Polkadot Issuance Model</h1>
+
+        <div class="toggle-group">
+            <a href="/?years=2" class="toggle-btn {% if years == 2 %}active{% endif %}">2 Years</a>
+            <a href="/?years=5" class="toggle-btn {% if years == 5 %}active{% endif %}">5 Years</a>
+            <a href="/?years=10" class="toggle-btn {% if years == 10 %}active{% endif %}">10 Years</a>
+        </div>
+
+        <div class="chart-card">
+            <canvas id="inflationChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+    const chartData = {{ chart_data_json|safe }};
+
+    function formatNumber(value) {
+        if (value >= 1e9) return (value / 1e9).toFixed(2) + 'B';
+        if (value >= 1e6) return (value / 1e6).toFixed(2) + 'M';
+        return value.toFixed(2);
+    }
+
+    // Precompute the index where projection starts
+    const projStart = chartData.points.findIndex(p => p.is_projected);
+
+    function projectedSegment(solidColor, fadedColor) {
+        return {
+            segment: {
+                borderColor: ctx => ctx.p0DataIndex >= projStart - 1 ? fadedColor : solidColor,
+                borderDash: ctx => ctx.p0DataIndex >= projStart - 1 ? [6, 3] : [],
+            },
+        };
+    }
+
+    const ctx = document.getElementById('inflationChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.points.map(p => p.timestamp),
+            datasets: [
+                {
+                    label: 'Issuance Rate (%)',
+                    data: chartData.points.map(p => p.inflation_rate),
+                    borderColor: '#2680FF',
+                    backgroundColor: 'rgba(38,128,255,0.1)',
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    yAxisID: 'yRate',
+                    tension: 0.3,
+                    ...projectedSegment('#2680FF', 'rgba(38,128,255,0.35)'),
+                },
+                {
+                    label: 'Supply (DOT)',
+                    data: chartData.points.map(p => p.supply),
+                    borderColor: '#26FF80',
+                    backgroundColor: 'rgba(38,255,128,0.1)',
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    yAxisID: 'ySupply',
+                    tension: 0.3,
+                    ...projectedSegment('#26FF80', 'rgba(38,255,128,0.35)'),
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    labels: { color: '#fff' },
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.9)',
+                    borderColor: '#E6007A',
+                    borderWidth: 1,
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    callbacks: {
+                        title: function(items) {
+                            const raw = chartData.points[items[0].dataIndex]?.timestamp;
+                            if (!raw) return '';
+                            return new Date(raw).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                        },
+                        label: function(context) {
+                            if (context.datasetIndex === 0) {
+                                return 'Issuance Rate: ' + context.parsed.y.toFixed(3) + '%';
+                            }
+                            return 'Supply: ' + formatNumber(context.parsed.y) + ' DOT';
+                        },
+                        afterBody: function(items) {
+                            const point = chartData.points[items[0].dataIndex];
+                            if (!point) return '';
+                            return 'Daily Issuance: ' + formatNumber(point.daily_issuance) + ' DOT';
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'month',
+                        displayFormats: { month: 'MMM yyyy' },
+                    },
+                    ticks: { color: '#fff', maxTicksLimit: 12 },
+                    grid: { color: 'rgba(230,0,122,0.15)' },
+                },
+                yRate: {
+                    type: 'linear',
+                    position: 'left',
+                    title: { display: true, text: 'Inflation (%)', color: '#fff' },
+                    ticks: { color: '#fff' },
+                    grid: { color: 'rgba(230,0,122,0.15)' },
+                },
+                ySupply: {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: 'Supply (DOT)', color: '#fff' },
+                    ticks: {
+                        color: '#fff',
+                        callback: function(value) { return formatNumber(value); },
+                    },
+                    grid: { drawOnChartArea: false },
+                },
+            },
+        },
+    });
+
+    // SSE for live blocks
+    const evtSource = new EventSource('/api/events');
+    const blockEl = document.getElementById('block-number');
+    evtSource.addEventListener('block', function(e) {
+        const block = JSON.parse(e.data);
+        blockEl.textContent = '#' + block.number.toLocaleString();
+    });
+    evtSource.onerror = function() {
+        blockEl.textContent = 'Reconnecting...';
+    };
+    </script>
+</body>
+</html>
