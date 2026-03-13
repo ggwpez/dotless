@@ -13,7 +13,7 @@ use axum::{
     Router,
 };
 use futures::stream::Stream;
-use std::{convert::Infallible, sync::Arc};
+use std::{collections::HashMap, convert::Infallible, sync::Arc};
 use tokio::sync::{broadcast, RwLock};
 use tower_http::services::ServeDir;
 
@@ -28,30 +28,20 @@ struct AppState {
 #[derive(askama::Template)]
 #[template(path = "index.html")]
 struct IndexTemplate {
-    chart_data_json: String,
-    years: u32,
-}
-
-#[derive(serde::Deserialize)]
-struct IndexQuery {
-    years: Option<u32>,
+    all_chart_data_json: String,
 }
 
 async fn index_handler(
     State(state): State<Arc<AppState>>,
-    Query(query): Query<IndexQuery>,
 ) -> Html<String> {
-    let years = query.years.unwrap_or(5);
     let cache = state.chart_cache.read().await;
-    let chart_data_json = cache
-        .get(years)
-        .map(|d| serde_json::to_string(d).unwrap_or_default())
-        .unwrap_or_else(|| "{}".into());
+    let all: HashMap<u32, &inflation::ChartData> = inflation::SUPPORTED_YEARS
+        .iter()
+        .filter_map(|&y| cache.get(y).map(|d| (y, d)))
+        .collect();
+    let all_chart_data_json = serde_json::to_string(&all).unwrap_or_else(|_| "{}".into());
 
-    let template = IndexTemplate {
-        chart_data_json,
-        years,
-    };
+    let template = IndexTemplate { all_chart_data_json };
     Html(template.render().unwrap_or_else(|e| format!("Template error: {e}")))
 }
 

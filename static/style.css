@@ -76,6 +76,10 @@ body {
 .toggle-btn {
     color: #fff;
     text-decoration: none;
+    border: none;
+    background: none;
+    font: inherit;
+    cursor: pointer;
     padding: 8px 20px;
     border-radius: 6px;
     font-size: 14px;

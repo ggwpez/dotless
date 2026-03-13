@@ -13,7 +13,7 @@ const OLD_DAILY_ISSUANCE: f64 = 120_000_000.0 / DAYS_PER_YEAR;
 const TARGET_TOTAL_ISSUANCE: f64 = 2_100_000_000.0;
 
 /// Approximate total issuance at March 14, 2026 (to be updated with real value)
-const MARCH_2026_TI: f64 = 1_670_000_000.0;
+const MARCH_2026_TI: f64 = 1_674_342_153.476060356;
 
 /// 26.28% closer to target every 2-year step (Perbill::from_parts(262_800_000))
 const BI_ANNUAL_RATE: f64 = 0.2628;
