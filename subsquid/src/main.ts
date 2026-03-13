@@ -18,9 +18,8 @@ async function getPays(ctx: ProcessorContext<Store>): Promise<EraPaid[]> {
     let pays: EraPaid[] = []
 
     for (let block of ctx.blocks) {
-        if (block.header.height < 23467056)
-            continue
-        const ti = totalIssuance.v0.get(block.header)
+        //if (block.header.height < 23467056)
+        //    continue
 
         for (let event of block.events) {
             if (event.name != events.staking.eraPaid.name)
@@ -28,7 +27,10 @@ async function getPays(ctx: ProcessorContext<Store>): Promise<EraPaid[]> {
 
             let minted: bigint = 0n
 
-            if (events.staking.eraPaid.v9300.is(event)) {
+            if (events.staking.eraPaid.v9090.is(event)) {
+                const { [1]: validatorPayout, [2]: remainder } = events.staking.eraPaid.v9090.decode(event)
+                minted = validatorPayout + remainder
+            } else if (events.staking.eraPaid.v9300.is(event)) {
                 const { validatorPayout, remainder } = events.staking.eraPaid.v9300.decode(event)
                 minted = validatorPayout + remainder
             } else {
@@ -36,13 +38,14 @@ async function getPays(ctx: ProcessorContext<Store>): Promise<EraPaid[]> {
             }
 
             assert(block.header.timestamp, `Got an undefined timestamp at block ${block.header.height}`)
+            const ti = await totalIssuance.v0.get(block.header)
 
             pays.push(new EraPaid({
                 id: event.id,
                 blockNumber: block.header.height,
                 timestamp: new Date(block.header.timestamp),
                 amountPaid: minted,
-                totalIssuance: await ti,
+                totalIssuance: ti,
             }))
         }
     }

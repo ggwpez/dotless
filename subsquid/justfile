@@ -1,0 +1,18 @@
+# Generate TypeORM entities from schema + substrate typegen
+codegen:
+    npx squid-typeorm-codegen
+    npx squid-substrate-typegen ./typegen.json
+
+# Build the project
+build:
+    rm -rf lib
+    tsc
+
+# Codegen + build + deploy to Subsquid Cloud
+deploy org:
+    npx sqd deploy --org {{org}} .
+
+# Update all npm dependencies
+update:
+    npx npm-check-updates -u
+    npm install
