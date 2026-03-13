@@ -27,10 +27,10 @@ const generateProjectionData = (
     legacyInflation: number;
     legacyIssuance: number;
     tooltipDate: string;
-    isProjected: boolean,
+    isProjected: boolean;
   }>,
   projectionDays: number = 365.25 * 5,
-  yearlyIssuance: number = 120_000_000 // 120M DOT per year
+  yearlyIssuance: number = 120_000_000, // 120M DOT per year
 ) => {
   const dailyIssuance = yearlyIssuance / 365.25;
   let projectedData = [...historicalData];
@@ -41,10 +41,11 @@ const generateProjectionData = (
 
     // Current model (linear issuance)
     const newCurrentIssuance = prevDay.currentIssuance + dailyIssuance;
-    const currentInflation = (dailyIssuance * 365.25 / newCurrentIssuance) * 100;
+    const currentInflation =
+      ((dailyIssuance * 365.25) / newCurrentIssuance) * 100;
 
     // Legacy model (10% exponential)
-    const legacyDailyIncrease = (prevDay.legacyIssuance * (0.1 / 365.25));
+    const legacyDailyIncrease = prevDay.legacyIssuance * (0.1 / 365.25);
     const newLegacyIssuance = prevDay.legacyIssuance + legacyDailyIncrease;
 
     projectedData.push({
@@ -59,10 +60,7 @@ const generateProjectionData = (
   }
 
   // Every 10th to make UI faster
-  return [
-    ...projectedData
-      .filter((_, index) => index % 30 === 0)
-  ];
+  return [...projectedData.filter((_, index) => index % 30 === 0)];
 };
 
 export default function ModelComparison() {
@@ -81,14 +79,16 @@ export default function ModelComparison() {
     if (!data || data.length < 2) return "MMM d, yyyy";
 
     // Calculate average time difference between points
-    const avgTimeDiff = data.reduce((sum: number, point: { timestamp: string }, i: number) => {
-      if (i === 0) return sum;
-      const diff = differenceInDays(
-        new Date(point.timestamp),
-        new Date(data[i - 1].timestamp)
-      );
-      return sum + diff;
-    }, 0) / (data.length - 1);
+    const avgTimeDiff =
+      data.reduce((sum: number, point: { timestamp: string }, i: number) => {
+        if (i === 0) return sum;
+        const diff = differenceInDays(
+          new Date(point.timestamp),
+          new Date(data[i - 1].timestamp),
+        );
+        return sum + diff;
+      }, 0) /
+      (data.length - 1);
 
     // Choose format based on average difference
     if (avgTimeDiff <= 7) return "MMM d"; // Within a week
@@ -140,7 +140,7 @@ export default function ModelComparison() {
   const chartData = generateProjectionData(
     historicalData,
     projectionYears * 365, // Convert years to days
-    120_000_000
+    120_000_000,
   );
 
   // Calculate saved amount using only historical data
@@ -172,27 +172,27 @@ export default function ModelComparison() {
         <h2 className="text-2xl font-bold">
           Model Comparison over the next {projectionYears} years
         </h2>
-        <ToggleGroup 
-          type="single" 
+        <ToggleGroup
+          type="single"
           value={projectionYears.toString()}
           onValueChange={(value) => value && setProjectionYears(Number(value))}
           defaultValue="5"
           className="bg-black/50 border border-neon-pink/20 rounded-lg p-1"
         >
-          <ToggleGroupItem 
-            value="2" 
+          <ToggleGroupItem
+            value="2"
             className="px-3 py-1 data-[state=on]:bg-neon-pink/20 rounded"
           >
             2 Years
           </ToggleGroupItem>
-          <ToggleGroupItem 
-            value="5" 
+          <ToggleGroupItem
+            value="5"
             className="px-3 py-1 data-[state=on]:bg-neon-pink/20 rounded"
           >
             5 Years
           </ToggleGroupItem>
-          <ToggleGroupItem 
-            value="10" 
+          <ToggleGroupItem
+            value="10"
             className="px-3 py-1 data-[state=on]:bg-neon-pink/20 rounded"
           >
             10 Years
@@ -261,9 +261,13 @@ export default function ModelComparison() {
                 boxShadow: "0 0 10px rgba(230,0,122,0.3)",
                 color: "#ffffff",
               }}
-              labelFormatter={(value) => format(new Date(value), "MMM d, yyyy HH:mm")}
+              labelFormatter={(value) =>
+                format(new Date(value), "MMM d, yyyy HH:mm")
+              }
               formatter={(value: number, name: string) => [
-                name.includes("Supply") ? `${formatNumber(value)} DOT` : value.toFixed(3) + "%",
+                name.includes("Supply")
+                  ? `${formatNumber(value)} DOT`
+                  : value.toFixed(3) + "%",
                 name,
               ]}
             />
