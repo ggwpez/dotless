@@ -20,9 +20,9 @@
         <h1 class="title">Polkadot Issuance Model</h1>
 
         <div class="toggle-group">
-            <a href="/?years=2" class="toggle-btn {% if years == 2 %}active{% endif %}">2 Years</a>
             <a href="/?years=5" class="toggle-btn {% if years == 5 %}active{% endif %}">5 Years</a>
             <a href="/?years=10" class="toggle-btn {% if years == 10 %}active{% endif %}">10 Years</a>
+            <a href="/?years=50" class="toggle-btn {% if years == 50 %}active{% endif %}">50 Years</a>
         </div>
 
         <div class="chart-card">
@@ -34,9 +34,10 @@
     const chartData = {{ chart_data_json|safe }};
 
     function formatNumber(value) {
-        if (value >= 1e9) return (value / 1e9).toFixed(2) + 'B';
-        if (value >= 1e6) return (value / 1e6).toFixed(2) + 'M';
-        return value.toFixed(2);
+        if (value >= 1e9) return (value / 1e9).toPrecision(3) + 'B';
+        if (value >= 1e6) return (value / 1e6).toPrecision(3) + 'M';
+        if (value >= 1e3) return (value / 1e3).toPrecision(3) + 'K';
+        return value.toPrecision(3);
     }
 
     // Precompute the index where projection starts
@@ -51,7 +52,12 @@
         };
     }
 
-    const ctx = document.getElementById('inflationChart').getContext('2d');
+    // Destroy any existing chart (bfcache / soft navigation)
+    const canvas = document.getElementById('inflationChart');
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+
+    const ctx = canvas.getContext('2d');
     new Chart(ctx, {
         type: 'line',
         data: {
@@ -65,7 +71,7 @@
                     borderWidth: 3,
                     pointRadius: 0,
                     yAxisID: 'yRate',
-                    tension: 0.3,
+                    tension: 0,
                     ...projectedSegment('#2680FF', 'rgba(38,128,255,0.35)'),
                 },
                 {
@@ -76,7 +82,7 @@
                     borderWidth: 3,
                     pointRadius: 0,
                     yAxisID: 'ySupply',
-                    tension: 0.3,
+                    tension: 0,
                     ...projectedSegment('#26FF80', 'rgba(38,255,128,0.35)'),
                 },
             ],
@@ -159,6 +165,13 @@
     evtSource.onerror = function() {
         blockEl.textContent = 'Reconnecting...';
     };
+
+    // Clean up on page hide (bfcache) to prevent stacking connections/charts
+    window.addEventListener('pagehide', function() {
+        evtSource.close();
+        const c = Chart.getChart(canvas);
+        if (c) c.destroy();
+    });
     </script>
 </body>
 </html>

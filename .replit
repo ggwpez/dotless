@@ -1,17 +1,30 @@
-modules = ["nodejs-20", "web", "postgresql-16"]
-run = "npm run dev"
-hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
+modules = ["rust-stable"]
+run = "cd dotless-rs && cargo run --release"
+entrypoint = "dotless-rs/src/main.rs"
+hidden = [".config", ".git", "node_modules", "dist", "target"]
 
 [nix]
 channel = "stable-24_05"
 
+[packager]
+language = "rust"
+
+[packager.features]
+packageSearch = true
+
+[languages.rust]
+pattern = "**/*.rs"
+
+[languages.rust.languageServer]
+start = "rust-analyzer"
+
 [deployment]
 deploymentTarget = "gce"
-build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
+build = ["sh", "-c", "cd dotless-rs && cargo build --release"]
+run = ["sh", "-c", "./dotless-rs/target/release/dotless-rs"]
 
 [[ports]]
-localPort = 4000
+localPort = 8080
 externalPort = 80
 
 [workflows]
@@ -24,19 +37,16 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Polkadot Inflation App"
+args = "Dotless Rust App"
 
 [[workflows.workflow]]
-name = "Polkadot Inflation App"
+name = "Dotless Rust App"
 author = "agent"
 
 [workflows.workflow.metadata]
 agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
-waitForPort = 4000
+args = "cd dotless-rs && cargo run --release"
+waitForPort = 8080

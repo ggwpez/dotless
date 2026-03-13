@@ -19,6 +19,7 @@ use tower_http::services::ServeDir;
 
 struct AppState {
     cached_events: RwLock<Vec<data::EraPaid>>,
+    chart_cache: RwLock<inflation::ChartCache>,
     block_tx: broadcast::Sender<live::BlockInfo>,
     latest_block: live::LatestBlock,
     http_client: reqwest::Client,
@@ -41,9 +42,11 @@ async fn index_handler(
     Query(query): Query<IndexQuery>,
 ) -> Html<String> {
     let years = query.years.unwrap_or(5);
-    let events = state.cached_events.read().await;
-    let chart_data = inflation::compute_chart_data(&events, years as f64);
-    let chart_data_json = serde_json::to_string(&chart_data).unwrap_or_default();
+    let cache = state.chart_cache.read().await;
+    let chart_data_json = cache
+        .get(years)
+        .map(|d| serde_json::to_string(d).unwrap_or_default())
+        .unwrap_or_else(|| "{}".into());
 
     let template = IndexTemplate {
         chart_data_json,
@@ -85,11 +88,16 @@ async fn main() {
         tracing::info!("Latest EraPaid: {}", last.timestamp);
     }
 
+    // Build chart cache once on startup
+    let chart_cache = inflation::ChartCache::new(&events);
+    tracing::info!("Chart cache built for {:?}", inflation::SUPPORTED_YEARS);
+
     let (block_tx, _) = broadcast::channel::<live::BlockInfo>(64);
     let latest_block: live::LatestBlock = Arc::new(RwLock::new(None));
 
     let state = Arc::new(AppState {
         cached_events: RwLock::new(events),
+        chart_cache: RwLock::new(chart_cache),
         block_tx: block_tx.clone(),
         latest_block: latest_block.clone(),
         http_client,
@@ -129,8 +137,11 @@ fn spawn_data_refresher(state: Arc<AppState>) {
                 Ok(new_events) => {
                     let count = new_events.len();
                     if count > 0 {
-                        state.cached_events.write().await.extend(new_events);
-                        tracing::info!("Appended {count} new EraPaid events");
+                        let mut events = state.cached_events.write().await;
+                        events.extend(new_events);
+                        // Incrementally update chart cache
+                        state.chart_cache.write().await.append(&events);
+                        tracing::info!("Appended {count} new EraPaid events, chart cache updated");
                     } else {
                         tracing::info!("No new EraPaid events");
                     }
