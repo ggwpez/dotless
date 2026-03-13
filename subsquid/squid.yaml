@@ -7,7 +7,7 @@ deploy:
   addons:
     postgres: 
     rpc:
-      - polkadot.http
+      - asset-hub-polkadot.http
   processor:
     cmd:
       - sqd

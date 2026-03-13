@@ -8,17 +8,56 @@ const DAYS_PER_YEAR: f64 = 365.25;
 /// Pre-2026-03-14: 120M DOT/year
 const OLD_DAILY_ISSUANCE: f64 = 120_000_000.0 / DAYS_PER_YEAR;
 
-/// From 2026-03-14 onwards: ~150K DOT/day (placeholder — edit this)
-const NEW_DAILY_ISSUANCE: f64 = 150_000.0;
+/// Hard cap target: 21B DOT
+const TARGET_TOTAL_ISSUANCE: f64 = 2_100_000_000.0;
+
+/// Approximate total issuance at March 14, 2026 (to be updated with real value)
+const MARCH_2026_TI: f64 = 1_670_000_000.0;
+
+/// 26.28% closer to target every 2-year step (Perbill::from_parts(262_800_000))
+const BI_ANNUAL_RATE: f64 = 0.2628;
+
+/// Step period: 2 years in days
+const STEP_PERIOD_DAYS: f64 = 2.0 * DAYS_PER_YEAR;
 
 /// The date the new issuance model takes effect
 fn new_model_date() -> NaiveDate {
     NaiveDate::from_ymd_opt(2026, 3, 14).unwrap()
 }
 
+/// Evaluate the stepped curve total issuance at a given number of periods.
+///
+/// Formula: target - (target - initial) * (1 - rate)^num_periods
+///
+/// Ported from polkadot-sdk `SteppedCurve::evaluate` with `RemainingPct`.
+fn stepped_curve_ti(num_periods: u32) -> f64 {
+    let diff = TARGET_TOTAL_ISSUANCE - MARCH_2026_TI;
+    let scale = (1.0 - BI_ANNUAL_RATE).powi(num_periods as i32);
+    TARGET_TOTAL_ISSUANCE - diff * scale
+}
+
 fn daily_issuance_for(date: NaiveDateTime) -> f64 {
     if date.date() >= new_model_date() {
-        NEW_DAILY_ISSUANCE
+        // Curve start is 2 years before March 14, 2026 so that the first step
+        // lands exactly on that date.
+        let curve_start = new_model_date()
+            .and_hms_opt(0, 0, 0)
+            .unwrap()
+            - TimeDelta::days(STEP_PERIOD_DAYS as i64);
+        let days_since_start = (date - curve_start).num_days().max(0) as f64;
+        let num_periods = (days_since_start / STEP_PERIOD_DAYS).floor() as u32;
+
+        // Emission for this 2-year step period
+        let ti_now = stepped_curve_ti(num_periods);
+        let ti_prev = if num_periods > 0 {
+            stepped_curve_ti(num_periods - 1)
+        } else {
+            MARCH_2026_TI
+        };
+        let step_emission = ti_now - ti_prev;
+
+        // Spread evenly across the 2-year period
+        step_emission / STEP_PERIOD_DAYS
     } else {
         OLD_DAILY_ISSUANCE
     }

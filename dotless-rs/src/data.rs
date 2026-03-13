@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct EraPaid {
     pub id: String,
-    pub block_number: i64,
     pub timestamp: String,
     pub amount_paid: String,
     pub total_issuance: String,
@@ -39,17 +38,30 @@ struct GraphQLData {
     era_paids: Vec<EraPaid>,
 }
 
+pub fn load_events_from_json(path: &str) -> Vec<EraPaid> {
+    match std::fs::read_to_string(path) {
+        Ok(contents) => serde_json::from_str(&contents).unwrap_or_else(|e| {
+            tracing::error!("Failed to parse {path}: {e}");
+            Vec::new()
+        }),
+        Err(_) => {
+            tracing::warn!("{path} not found, starting with empty history");
+            Vec::new()
+        }
+    }
+}
+
 const DEFAULT_GRAPHQL_URL: &str =
     "https://dotburned.squids.live/polkadot-issuance-sqd-v2@v1/api/graphql";
 
 pub async fn fetch_era_paid_events(
     client: &reqwest::Client,
-    after_block: Option<i64>,
+    after_timestamp: Option<&str>,
 ) -> anyhow::Result<Vec<EraPaid>> {
     let url = std::env::var("SUBSQUID_GRAPHQL_URL").unwrap_or_else(|_| DEFAULT_GRAPHQL_URL.into());
 
-    let where_clause = match after_block {
-        Some(block) => format!(", where: {{ blockNumber_gt: {block} }}"),
+    let where_clause = match after_timestamp {
+        Some(ts) => format!(r#", where: {{ timestamp_gt: "{ts}" }}"#),
         None => String::new(),
     };
 
@@ -58,7 +70,6 @@ pub async fn fetch_era_paid_events(
             query {{
                 eraPaids(orderBy: timestamp_ASC{where_clause}) {{
                     id
-                    blockNumber
                     timestamp
                     amountPaid
                     totalIssuance

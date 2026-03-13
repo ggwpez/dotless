@@ -27,18 +27,15 @@ async function getPays(ctx: ProcessorContext<Store>): Promise<EraPaid[]> {
 
             let minted: bigint = 0n
 
-            if (events.staking.eraPaid.v9090.is(event)) {
-                const { [1]: validatorPayout, [2]: remainder } = events.staking.eraPaid.v9090.decode(event)
-                minted = validatorPayout + remainder
-            } else if (events.staking.eraPaid.v9300.is(event)) {
-                const { validatorPayout, remainder } = events.staking.eraPaid.v9300.decode(event)
+            if (events.staking.eraPaid.v2000000.is(event)) {
+                const { validatorPayout, remainder } = events.staking.eraPaid.v2000000.decode(event)
                 minted = validatorPayout + remainder
             } else {
                 throw new Error('Unsupported spec')
             }
 
             assert(block.header.timestamp, `Got an undefined timestamp at block ${block.header.height}`)
-            const ti = await totalIssuance.v0.get(block.header)
+            const ti = await totalIssuance.v601.get(block.header)
 
             pays.push(new EraPaid({
                 id: event.id,

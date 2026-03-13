@@ -14,12 +14,12 @@ import {events} from './types'
 export const processor = new SubstrateBatchProcessor()
     // Lookup archive by the network name in Subsquid registry
     // See https://docs.subsquid.io/substrate-indexing/supported-networks/
-    .setGateway('https://v2.archive.subsquid.io/network/polkadot')
+    .setGateway('https://v2.archive.subsquid.io/network/asset-hub-polkadot')
     // Chain RPC endpoint is required on Substrate for metadata and real-time updates
     .setRpcEndpoint({
         // Set via .env for local runs or via secrets when deploying to Subsquid Cloud
         // https://docs.subsquid.io/deploy-squid/env-variables/
-        url: assertNotNull(process.env.RPC_POLKADOT_HTTP, 'No RPC endpoint supplied'),
+        url: assertNotNull(process.env.RPC_ASSET_HUB_POLKADOT_HTTP, 'No RPC endpoint supplied'),
         // More RPC connection options at https://docs.subsquid.io/substrate-indexing/setup/general/#set-data-source
         rateLimit: 10
     })

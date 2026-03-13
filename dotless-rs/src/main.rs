@@ -67,29 +67,22 @@ async fn main() {
 
     let http_client = reqwest::Client::new();
 
-    // Fetch initial data
-    tracing::info!("Fetching EraPaid events from Subsquid...");
-    let events = data::fetch_era_paid_events(&http_client, None)
-        .await
-        .unwrap_or_else(|e| {
-            tracing::error!("Failed to fetch initial data: {e}");
-            Vec::new()
-        });
-    tracing::info!("Loaded {} EraPaid events", events.len());
-    if let Some(last) = events.last() {
-        tracing::info!("Latest EraPaid: block {} at {}", last.block_number, last.timestamp);
-    }
+    // Load historical data from JSON, then fetch newer events from GraphQL
+    let mut events = data::load_events_from_json("era_paid_events.json");
+    tracing::info!("Loaded {} events from era_paid_events.json", events.len());
 
-    // Dump to JSON for manual editing / reuse
-    let json_path = "era_paid_events.json";
-    match serde_json::to_string_pretty(&events) {
-        Ok(json) => {
-            std::fs::write(json_path, &json).unwrap_or_else(|e| {
-                tracing::error!("Failed to write {json_path}: {e}");
-            });
-            tracing::info!("Wrote {json_path} ({} events)", events.len());
+    let last_ts = events.last().map(|e| e.timestamp.as_str());
+    tracing::info!("Fetching EraPaid events after {last_ts:?}...");
+    match data::fetch_era_paid_events(&http_client, last_ts).await {
+        Ok(new) => {
+            tracing::info!("Fetched {} new events from GraphQL", new.len());
+            events.extend(new);
         }
-        Err(e) => tracing::error!("Failed to serialize events: {e}"),
+        Err(e) => tracing::error!("Failed to fetch from GraphQL: {e}"),
+    }
+    tracing::info!("Total: {} EraPaid events", events.len());
+    if let Some(last) = events.last() {
+        tracing::info!("Latest EraPaid: {}", last.timestamp);
     }
 
     let (block_tx, _) = broadcast::channel::<live::BlockInfo>(64);
@@ -125,14 +118,14 @@ fn spawn_data_refresher(state: Arc<AppState>) {
         interval.tick().await; // skip immediate first tick
         loop {
             interval.tick().await;
-            let last_block = state
+            let last_ts = state
                 .cached_events
                 .read()
                 .await
                 .last()
-                .map(|e| e.block_number);
-            tracing::info!("Fetching EraPaid events after block {last_block:?}...");
-            match data::fetch_era_paid_events(&state.http_client, last_block).await {
+                .map(|e| e.timestamp.clone());
+            tracing::info!("Fetching EraPaid events after {last_ts:?}...");
+            match data::fetch_era_paid_events(&state.http_client, last_ts.as_deref()).await {
                 Ok(new_events) => {
                     let count = new_events.len();
                     if count > 0 {
