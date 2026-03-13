@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EraPaid {
-    pub id: String,
     pub timestamp: String,
     pub amount_paid: String,
     pub total_issuance: String,
