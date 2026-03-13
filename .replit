@@ -21,7 +21,7 @@ start = "rust-analyzer"
 [deployment]
 deploymentTarget = "gce"
 build = ["sh", "-c", "cargo build --release"]
-run = ["sh", "-c", "target/release/dotless-rs"]
+run = ["sh", "-c", "target/release/dotless"]
 
 [[ports]]
 localPort = 8080
