@@ -1,5 +1,5 @@
 modules = ["rust-stable"]
-run = "cd dotless-rs && cargo run --release"
+run = "cargo run --release"
 entrypoint = "dotless-rs/src/main.rs"
 hidden = [".config", ".git", "node_modules", "dist", "target"]
 
@@ -20,7 +20,7 @@ start = "rust-analyzer"
 
 [deployment]
 deploymentTarget = "gce"
-build = ["sh", "-c", "cd dotless-rs && cargo build --release"]
+build = ["sh", "-c", "cargo build --release"]
 run = ["sh", "-c", "./dotless-rs/target/release/dotless-rs"]
 
 [[ports]]
@@ -48,5 +48,5 @@ agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd dotless-rs && cargo run --release"
+args = "cargo run --release"
 waitForPort = 8080
