@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /Users/vados/Documents/work/dotless/dotless-rs && cargo check 2>&1)",
+      "Bash(cargo check:*)",
+      "WebSearch"
+    ]
+  }
+}
