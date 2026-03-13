@@ -21,6 +21,40 @@
         <div class="chart-card">
             <canvas id="inflationChart"></canvas>
         </div>
+
+        <div class="info-card">
+            <h2>New Polkadot Issuance Model</h2>
+            <p>
+                Approved via Polkadot OpenGov
+                <a href="https://polkadot.subsquare.io/referenda/1710" target="_blank">Referendum #1710</a>,
+                Polkadot transitions to a capped supply model on
+                <span class="highlight">March 14, 2026</span>.
+            </p>
+
+            <h3>Supply Cap</h3>
+            <p>
+                DOT supply is capped at <span class="highlight">2.1 Billion DOT</span>.
+                The previous model had no cap and issued ~120M DOT/year.
+            </p>
+
+            <h3>Stepped Issuance</h3>
+            <p>
+                The new model issues <span class="highlight">26.28% of the remaining distance to the cap every two years</span>
+                (equivalent to ~13.14%/year). This works out to ~56M DOT/year in the first period
+                (March 2026 - March 2028), an initial ~53.6% reduction compared to the previous year.
+            </p>
+            <p>
+                Each step moves the total supply closer to the 2.1B cap -
+                effectively reaching it around the year 2160.
+            </p>
+
+            <p style="margin-top: 16px; font-size: 13px; color: #888;">
+                Tracking issue:
+                <a href="https://github.com/polkadot-fellows/runtimes/issues/985" target="_blank">runtimes#985</a>
+                &middot; Implementation:
+                <a href="https://github.com/polkadot-fellows/runtimes/pull/898" target="_blank">runtimes#898</a>
+            </p>
+        </div>
     </div>
 
     <script>

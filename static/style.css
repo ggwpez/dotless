@@ -112,3 +112,56 @@ body {
     filter: drop-shadow(0 0 6px rgba(38, 128, 255, 0.5))
             drop-shadow(0 0 6px rgba(38, 255, 128, 0.5));
 }
+
+.info-card {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(230, 0, 122, 0.5);
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 0 15px rgba(230, 0, 122, 0.3);
+    margin-top: 24px;
+    transition: box-shadow 0.3s;
+    line-height: 1.7;
+    font-size: 15px;
+    color: #ccc;
+}
+
+.info-card:hover {
+    box-shadow: 0 0 30px rgba(230, 0, 122, 0.5);
+}
+
+.info-card h2 {
+    font-size: 1.4rem;
+    color: #fff;
+    margin-bottom: 16px;
+}
+
+.info-card h3 {
+    font-size: 1.1rem;
+    color: #fff;
+    margin-top: 20px;
+    margin-bottom: 8px;
+}
+
+.info-card a {
+    color: #E6007A;
+    text-decoration: none;
+}
+
+.info-card a:hover {
+    text-decoration: underline;
+}
+
+.info-card .highlight {
+    color: #fff;
+    font-weight: 600;
+}
+
+.info-card ul {
+    padding-left: 20px;
+    margin-top: 8px;
+}
+
+.info-card li {
+    margin-bottom: 4px;
+}

@@ -4,7 +4,7 @@ mod live;
 
 use askama::Template;
 use axum::{
-    extract::{Query, State},
+    extract::State,
     response::{
         sse::{Event, Sse},
         Html,
