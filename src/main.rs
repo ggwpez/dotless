@@ -25,10 +25,13 @@ struct AppState {
     http_client: reqwest::Client,
 }
 
+const HARD_CAP_BLOCK: u64 = 30_349_908;
+
 #[derive(askama::Template)]
 #[template(path = "index.html")]
 struct IndexTemplate {
     all_chart_data_json: String,
+    is_live: bool,
 }
 
 async fn index_handler(
@@ -41,7 +44,15 @@ async fn index_handler(
         .collect();
     let all_chart_data_json = serde_json::to_string(&all).unwrap_or_else(|_| "{}".into());
 
-    let template = IndexTemplate { all_chart_data_json };
+    let is_live = state
+        .latest_block
+        .read()
+        .await
+        .as_ref()
+        .map(|b| b.number >= HARD_CAP_BLOCK)
+        .unwrap_or(false);
+
+    let template = IndexTemplate { all_chart_data_json, is_live };
     Html(template.render().unwrap_or_else(|e| format!("Template error: {e}")))
 }
 
