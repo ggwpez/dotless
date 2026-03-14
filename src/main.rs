@@ -1,37 +1,27 @@
 mod data;
 mod inflation;
-mod live;
 
 use askama::Template;
 use axum::{
     extract::State,
-    response::{
-        sse::{Event, Sse},
-        Html,
-    },
+    response::Html,
     routing::get,
     Router,
 };
-use futures::stream::Stream;
-use std::{collections::HashMap, convert::Infallible, sync::Arc};
-use tokio::sync::{broadcast, RwLock};
+use std::{collections::HashMap, sync::Arc};
+use tokio::sync::RwLock;
 use tower_http::services::ServeDir;
 
 struct AppState {
     cached_events: RwLock<Vec<data::EraPaid>>,
     chart_cache: RwLock<inflation::ChartCache>,
-    block_tx: broadcast::Sender<live::BlockInfo>,
-    latest_block: live::LatestBlock,
     http_client: reqwest::Client,
 }
-
-const HARD_CAP_BLOCK: u64 = 30_349_908;
 
 #[derive(askama::Template)]
 #[template(path = "index.html")]
 struct IndexTemplate {
     all_chart_data_json: String,
-    is_live: bool,
 }
 
 async fn index_handler(
@@ -44,20 +34,8 @@ async fn index_handler(
         .collect();
     let all_chart_data_json = serde_json::to_string(&all).unwrap_or_else(|_| "{}".into());
 
-    let is_live = state
-        .latest_block
-        .read()
-        .await
-        .as_ref()
-        .map(|b| b.number >= HARD_CAP_BLOCK)
-        .unwrap_or(false);
-
-    let template = IndexTemplate { all_chart_data_json, is_live };
+    let template = IndexTemplate { all_chart_data_json };
     Html(template.render().unwrap_or_else(|e| format!("Template error: {e}")))
-}
-
-async fn sse_route(State(state): State<Arc<AppState>>) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    live::sse_handler(state.block_tx.clone(), state.latest_block.clone()).await
 }
 
 #[tokio::main]
@@ -93,24 +71,16 @@ async fn main() {
     let chart_cache = inflation::ChartCache::new(&events);
     tracing::info!("Chart cache built for {:?}", inflation::SUPPORTED_YEARS);
 
-    let (block_tx, _) = broadcast::channel::<live::BlockInfo>(64);
-    let latest_block: live::LatestBlock = Arc::new(RwLock::new(None));
-
     let state = Arc::new(AppState {
         cached_events: RwLock::new(events),
         chart_cache: RwLock::new(chart_cache),
-        block_tx: block_tx.clone(),
-        latest_block: latest_block.clone(),
         http_client,
     });
 
-    // Spawn background tasks
-    live::spawn_block_subscriber(block_tx, latest_block).await;
     spawn_data_refresher(state.clone());
 
     let app = Router::new()
         .route("/", get(index_handler))
-        .route("/api/events", get(sse_route))
         .nest_service("/static", ServeDir::new("static"))
         .with_state(state);
 
@@ -140,7 +110,6 @@ fn spawn_data_refresher(state: Arc<AppState>) {
                     if count > 0 {
                         let mut events = state.cached_events.write().await;
                         events.extend(new_events);
-                        // Incrementally update chart cache
                         state.chart_cache.write().await.append(&events);
                         tracing::info!("Appended {count} new EraPaid events, chart cache updated");
                     } else {
