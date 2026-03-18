@@ -11,35 +11,32 @@ body {
     min-height: 100vh;
 }
 
-.top-bar {
+.footer {
     display: flex;
-    justify-content: flex-end;
-    padding: 12px 24px;
-}
-
-.block-indicator {
-    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #aaa;
-    background: rgba(0, 0, 0, 0.8);
-    border: 1px solid rgba(38, 255, 128, 0.3);
-    border-radius: 8px;
-    padding: 6px 14px;
+    max-width: 1200px;
+    margin: 24px auto 0;
+    padding: 16px 24px;
+    font-size: 13px;
+    color: #888;
 }
 
-.pulse-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #26FF80;
-    animation: pulse 2s ease-in-out infinite;
+.footer-link {
+    color: #888;
+    text-decoration: none;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; box-shadow: 0 0 4px #26FF80; }
-    50% { opacity: 0.4; box-shadow: 0 0 8px #26FF80; }
+.footer-link:hover {
+    color: #fff;
+}
+
+.fresh {
+    color: #E6007A;
+}
+
+.stale {
+    color: #E6007A;
 }
 
 .container {

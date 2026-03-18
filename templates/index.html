@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Polkadot Issuance Model</title>
+    <meta property="og:title" content="Polkadot Issuance Model">
+    <meta property="og:description" content="Monitor Polkadot's new capped supply model; 2.1B DOT hard cap!">
+    <meta property="og:image" content="https://dotless.xyz/static/preview.jpg">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Polkadot Issuance Model">
+    <meta name="twitter:description" content="Monitor Polkadot's new capped supply model; 2.1B DOT hard cap!">
+    <meta name="twitter:image" content="https://dotless.xyz/static/preview.jpg">
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
@@ -55,6 +63,11 @@
             </p>
         </div>
     </div>
+
+    <footer class="footer">
+        <span id="freshness"></span>
+        <a href="https://github.com/ggwpez/dotless" target="_blank" class="footer-link">Source Code</a>
+    </footer>
 
     <script>
     const allData = {{ all_chart_data_json|safe }};
@@ -196,6 +209,16 @@
 
     // Initial render
     renderChart(5);
+
+    // Data freshness
+    const lastTs = '{{ last_event_ts }}';
+    const el = document.getElementById('freshness');
+    if (lastTs) {
+        const ageHrs = (Date.now() - new Date(lastTs).getTime()) / 3.6e6;
+        const fresh = ageHrs < 25;
+        el.className = fresh ? 'fresh' : 'stale';
+        el.textContent = fresh ? 'Data is fresh' : 'Data may be stale';
+    }
     </script>
 </body>
 </html>

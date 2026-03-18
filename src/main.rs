@@ -22,6 +22,7 @@ struct AppState {
 #[template(path = "index.html")]
 struct IndexTemplate {
     all_chart_data_json: String,
+    last_event_ts: String,
 }
 
 async fn index_handler(
@@ -34,7 +35,15 @@ async fn index_handler(
         .collect();
     let all_chart_data_json = serde_json::to_string(&all).unwrap_or_else(|_| "{}".into());
 
-    let template = IndexTemplate { all_chart_data_json };
+    let last_event_ts = state
+        .cached_events
+        .read()
+        .await
+        .last()
+        .map(|e| e.timestamp.clone())
+        .unwrap_or_default();
+
+    let template = IndexTemplate { all_chart_data_json, last_event_ts };
     Html(template.render().unwrap_or_else(|e| format!("Template error: {e}")))
 }
 
