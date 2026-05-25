@@ -63,7 +63,7 @@ deploy-ansible *ARGS:
 
 # Tail dotless logs
 logs:
-    ssh server journalctl -u dotless -f
+    ssh server sudo journalctl -u dotless -f
 
 # Tail caddy logs (access + errors)
 logs-caddy:

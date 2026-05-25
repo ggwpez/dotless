@@ -30,7 +30,7 @@
   pre_tasks:
     - name: Assert Debian/Ubuntu host
       ansible.builtin.assert:
-        that: ansible_os_family == "Debian"
+        that: ansible_facts['os_family'] == "Debian"
         fail_msg: "This playbook targets Debian/Ubuntu hosts only."
       tags: always
 
@@ -133,6 +133,8 @@
         recursive:  true
         delete:     true
         rsync_opts:
+          - "--no-owner"   # let server keep dotless:dotless; chown task fixes the rest
+          - "--no-group"
           - "--exclude=.git/"
           - "--exclude=target/"
           - "--exclude=node_modules/"
