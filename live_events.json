@@ -1,0 +1,872 @@
+[
+  {
+    "timestamp": "2026-01-01T03:36:24.000Z",
+    "amountPaid": "3287974202178281",
+    "totalIssuance": "16508360106061262274",
+    "blockNumber": 11040924
+  },
+  {
+    "timestamp": "2026-01-02T03:36:18.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16511300359396679553",
+    "blockNumber": 11054722
+  },
+  {
+    "timestamp": "2026-01-03T03:36:24.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16514800811712606883",
+    "blockNumber": 11068549
+  },
+  {
+    "timestamp": "2026-01-04T03:36:24.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16517591555828206795",
+    "blockNumber": 11082352
+  },
+  {
+    "timestamp": "2026-01-05T03:36:24.000Z",
+    "amountPaid": "3287974278288796",
+    "totalIssuance": "16520558539523356449",
+    "blockNumber": 11096106
+  },
+  {
+    "timestamp": "2026-01-06T03:36:24.000Z",
+    "amountPaid": "3287974202178281",
+    "totalIssuance": "16523124667552361613",
+    "blockNumber": 11109913
+  },
+  {
+    "timestamp": "2026-01-07T03:36:18.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16526489759629766196",
+    "blockNumber": 11123698
+  },
+  {
+    "timestamp": "2026-01-08T03:36:30.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16529603202862791712",
+    "blockNumber": 11137404
+  },
+  {
+    "timestamp": "2026-01-09T03:36:24.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16532936083706768934",
+    "blockNumber": 11151040
+  },
+  {
+    "timestamp": "2026-01-10T03:36:24.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16536246688451136861",
+    "blockNumber": 11164659
+  },
+  {
+    "timestamp": "2026-01-11T03:36:24.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16539236165477358518",
+    "blockNumber": 11178380
+  },
+  {
+    "timestamp": "2026-01-12T03:36:36.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16542357671183614594",
+    "blockNumber": 11192359
+  },
+  {
+    "timestamp": "2026-01-13T03:36:18.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16546098573836596167",
+    "blockNumber": 11206263
+  },
+  {
+    "timestamp": "2026-01-14T03:36:18.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16549343920525875686",
+    "blockNumber": 11220141
+  },
+  {
+    "timestamp": "2026-01-15T03:36:18.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16552656803319823251",
+    "blockNumber": 11234013
+  },
+  {
+    "timestamp": "2026-01-16T03:36:18.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16556071162228107567",
+    "blockNumber": 11247973
+  },
+  {
+    "timestamp": "2026-01-17T03:36:24.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16559165537521068260",
+    "blockNumber": 11261904
+  },
+  {
+    "timestamp": "2026-01-18T03:36:18.000Z",
+    "amountPaid": "3287974278288796",
+    "totalIssuance": "16562308400521609685",
+    "blockNumber": 11275870
+  },
+  {
+    "timestamp": "2026-01-19T03:36:18.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16565626278643826350",
+    "blockNumber": 11289775
+  },
+  {
+    "timestamp": "2026-01-20T03:36:18.000Z",
+    "amountPaid": "3287974202178281",
+    "totalIssuance": "16569103689300709269",
+    "blockNumber": 11303601
+  },
+  {
+    "timestamp": "2026-01-21T03:36:18.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16572190838150830985",
+    "blockNumber": 11317463
+  },
+  {
+    "timestamp": "2026-01-22T03:36:18.000Z",
+    "amountPaid": "3287974278288796",
+    "totalIssuance": "16575446024459494921",
+    "blockNumber": 11331120
+  },
+  {
+    "timestamp": "2026-01-23T03:36:24.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16578542547971625766",
+    "blockNumber": 11344806
+  },
+  {
+    "timestamp": "2026-01-24T03:36:18.000Z",
+    "amountPaid": "3287974202178281",
+    "totalIssuance": "16581937791049541685",
+    "blockNumber": 11358838
+  },
+  {
+    "timestamp": "2026-01-25T03:36:24.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16584877897440731096",
+    "blockNumber": 11372867
+  },
+  {
+    "timestamp": "2026-01-26T03:36:18.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16588334832301452699",
+    "blockNumber": 11386913
+  },
+  {
+    "timestamp": "2026-01-27T03:36:18.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16591868253774085896",
+    "blockNumber": 11400912
+  },
+  {
+    "timestamp": "2026-01-28T03:36:12.000Z",
+    "amountPaid": "3287974278288796",
+    "totalIssuance": "16595320064340393155",
+    "blockNumber": 11429834
+  },
+  {
+    "timestamp": "2026-01-29T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16598592766873884076",
+    "blockNumber": 11465383
+  },
+  {
+    "timestamp": "2026-01-30T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16601583478358620975",
+    "blockNumber": 11500995
+  },
+  {
+    "timestamp": "2026-01-31T03:36:12.000Z",
+    "amountPaid": "3287974202178281",
+    "totalIssuance": "16605000457117800377",
+    "blockNumber": 11537255
+  },
+  {
+    "timestamp": "2026-02-01T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16608134768409274398",
+    "blockNumber": 11573357
+  },
+  {
+    "timestamp": "2026-02-02T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16611446214133999755",
+    "blockNumber": 11609285
+  },
+  {
+    "timestamp": "2026-02-03T03:36:12.000Z",
+    "amountPaid": "3287974278288796",
+    "totalIssuance": "16615105938698988036",
+    "blockNumber": 11645347
+  },
+  {
+    "timestamp": "2026-02-04T03:36:12.000Z",
+    "amountPaid": "3287974202178281",
+    "totalIssuance": "16618068903526995744",
+    "blockNumber": 11680792
+  },
+  {
+    "timestamp": "2026-02-05T03:36:36.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16621524880325774225",
+    "blockNumber": 11716643
+  },
+  {
+    "timestamp": "2026-02-06T03:36:36.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16624802067463772570",
+    "blockNumber": 11752451
+  },
+  {
+    "timestamp": "2026-02-07T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16628126944452116579",
+    "blockNumber": 11787528
+  },
+  {
+    "timestamp": "2026-02-08T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16631261022421689771",
+    "blockNumber": 11825599
+  },
+  {
+    "timestamp": "2026-02-09T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16634387412543221933",
+    "blockNumber": 11873924
+  },
+  {
+    "timestamp": "2026-02-10T03:36:36.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16638139589411685669",
+    "blockNumber": 11920576
+  },
+  {
+    "timestamp": "2026-02-11T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16640990902448789873",
+    "blockNumber": 11965701
+  },
+  {
+    "timestamp": "2026-02-12T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16644056831260761977",
+    "blockNumber": 12010411
+  },
+  {
+    "timestamp": "2026-02-13T03:36:12.000Z",
+    "amountPaid": "3287745908689078",
+    "totalIssuance": "16647077162341900953",
+    "blockNumber": 12054921
+  },
+  {
+    "timestamp": "2026-02-14T03:36:24.000Z",
+    "amountPaid": "3288202571777999",
+    "totalIssuance": "16650368657018656391",
+    "blockNumber": 12101576
+  },
+  {
+    "timestamp": "2026-02-15T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16653498658886276663",
+    "blockNumber": 12147439
+  },
+  {
+    "timestamp": "2026-02-16T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16656467829407636893",
+    "blockNumber": 12192640
+  },
+  {
+    "timestamp": "2026-02-17T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16660278112371986553",
+    "blockNumber": 12239162
+  },
+  {
+    "timestamp": "2026-02-18T03:36:36.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16664086268342103292",
+    "blockNumber": 12286562
+  },
+  {
+    "timestamp": "2026-02-19T03:36:12.000Z",
+    "amountPaid": "3287974278288796",
+    "totalIssuance": "16667353823842370546",
+    "blockNumber": 12333690
+  },
+  {
+    "timestamp": "2026-02-20T03:36:12.000Z",
+    "amountPaid": "3287974202178281",
+    "totalIssuance": "16670171324505452490",
+    "blockNumber": 12380916
+  },
+  {
+    "timestamp": "2026-02-21T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16673563249271021937",
+    "blockNumber": 12427997
+  },
+  {
+    "timestamp": "2026-02-22T03:36:36.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16676701009803730177",
+    "blockNumber": 12475047
+  },
+  {
+    "timestamp": "2026-02-23T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16679720016877946699",
+    "blockNumber": 12521912
+  },
+  {
+    "timestamp": "2026-02-24T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16683457016018963633",
+    "blockNumber": 12568442
+  },
+  {
+    "timestamp": "2026-02-25T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16687127525259519129",
+    "blockNumber": 12613690
+  },
+  {
+    "timestamp": "2026-02-26T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16690115192857694497",
+    "blockNumber": 12658429
+  },
+  {
+    "timestamp": "2026-02-27T03:36:48.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16693489624721874983",
+    "blockNumber": 12704993
+  },
+  {
+    "timestamp": "2026-02-28T03:36:12.000Z",
+    "amountPaid": "3287974278288796",
+    "totalIssuance": "16696659743235657594",
+    "blockNumber": 12753558
+  },
+  {
+    "timestamp": "2026-03-01T03:36:24.000Z",
+    "amountPaid": "3287974202178281",
+    "totalIssuance": "16699926784438337189",
+    "blockNumber": 12802439
+  },
+  {
+    "timestamp": "2026-03-02T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16703167019630879866",
+    "blockNumber": 12850894
+  },
+  {
+    "timestamp": "2026-03-03T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16706734329649066327",
+    "blockNumber": 12898134
+  },
+  {
+    "timestamp": "2026-03-04T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16710181096971717183",
+    "blockNumber": 12945626
+  },
+  {
+    "timestamp": "2026-03-05T03:36:24.000Z",
+    "amountPaid": "3287974278288796",
+    "totalIssuance": "16713760980013382184",
+    "blockNumber": 12994578
+  },
+  {
+    "timestamp": "2026-03-06T03:36:12.000Z",
+    "amountPaid": "3287974202178281",
+    "totalIssuance": "16716872770771448711",
+    "blockNumber": 13043933
+  },
+  {
+    "timestamp": "2026-03-07T03:36:24.000Z",
+    "amountPaid": "3287974316344054",
+    "totalIssuance": "16720062301481678553",
+    "blockNumber": 13094242
+  },
+  {
+    "timestamp": "2026-03-08T03:36:12.000Z",
+    "amountPaid": "3287974164123024",
+    "totalIssuance": "16723076199589779602",
+    "blockNumber": 13144179
+  },
+  {
+    "timestamp": "2026-03-09T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16726167014807062315",
+    "blockNumber": 13183613
+  },
+  {
+    "timestamp": "2026-03-10T03:36:24.000Z",
+    "amountPaid": "3287974278288796",
+    "totalIssuance": "16730133372723963772",
+    "blockNumber": 13222643
+  },
+  {
+    "timestamp": "2026-03-11T03:36:12.000Z",
+    "amountPaid": "3287974202178281",
+    "totalIssuance": "16733342031931587317",
+    "blockNumber": 13261519
+  },
+  {
+    "timestamp": "2026-03-12T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16736524113652029609",
+    "blockNumber": 13300291
+  },
+  {
+    "timestamp": "2026-03-13T03:36:12.000Z",
+    "amountPaid": "3287974240233538",
+    "totalIssuance": "16739832423976483646",
+    "blockNumber": 13338797
+  },
+  {
+    "timestamp": "2026-03-14T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16743651231219923219",
+    "blockNumber": 13377452
+  },
+  {
+    "timestamp": "2026-03-15T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16744938872837131835",
+    "blockNumber": 13416712
+  },
+  {
+    "timestamp": "2026-03-16T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16746192536654004923",
+    "blockNumber": 13455595
+  },
+  {
+    "timestamp": "2026-03-17T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16748245341254561735",
+    "blockNumber": 13494094
+  },
+  {
+    "timestamp": "2026-03-18T03:36:12.000Z",
+    "amountPaid": "1531319416828486",
+    "totalIssuance": "16749611510639807326",
+    "blockNumber": 13532221
+  },
+  {
+    "timestamp": "2026-03-19T03:36:12.000Z",
+    "amountPaid": "1531319381381278",
+    "totalIssuance": "16750975883363536089",
+    "blockNumber": 13569915
+  },
+  {
+    "timestamp": "2026-03-20T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16752501050627773229",
+    "blockNumber": 13606346
+  },
+  {
+    "timestamp": "2026-03-21T03:36:12.000Z",
+    "amountPaid": "1531319416828486",
+    "totalIssuance": "16753931766919124890",
+    "blockNumber": 13643285
+  },
+  {
+    "timestamp": "2026-03-22T03:36:48.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16755499348597241559",
+    "blockNumber": 13681052
+  },
+  {
+    "timestamp": "2026-03-23T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16756755396275511869",
+    "blockNumber": 13718287
+  },
+  {
+    "timestamp": "2026-03-24T03:36:24.000Z",
+    "amountPaid": "1531319381381278",
+    "totalIssuance": "16758684850516051347",
+    "blockNumber": 13755079
+  },
+  {
+    "timestamp": "2026-03-25T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16760102986157101645",
+    "blockNumber": 13792173
+  },
+  {
+    "timestamp": "2026-03-26T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16761632355948765431",
+    "blockNumber": 13828751
+  },
+  {
+    "timestamp": "2026-03-27T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16763045448326439044",
+    "blockNumber": 13865407
+  },
+  {
+    "timestamp": "2026-03-28T03:36:36.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16764689366697914000",
+    "blockNumber": 13902394
+  },
+  {
+    "timestamp": "2026-03-29T03:36:12.000Z",
+    "amountPaid": "1531319416828486",
+    "totalIssuance": "16765975367112573580",
+    "blockNumber": 13939723
+  },
+  {
+    "timestamp": "2026-03-30T03:36:12.000Z",
+    "amountPaid": "1531319381381278",
+    "totalIssuance": "16767520681769210124",
+    "blockNumber": 13976912
+  },
+  {
+    "timestamp": "2026-03-31T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16769408545446039355",
+    "blockNumber": 14013427
+  },
+  {
+    "timestamp": "2026-04-01T03:36:36.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16770861908788445194",
+    "blockNumber": 14048782
+  },
+  {
+    "timestamp": "2026-04-02T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16772389424265580176",
+    "blockNumber": 14083989
+  },
+  {
+    "timestamp": "2026-04-03T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16773894991768762521",
+    "blockNumber": 14122075
+  },
+  {
+    "timestamp": "2026-04-04T03:36:12.000Z",
+    "amountPaid": "1531213057479944",
+    "totalIssuance": "16775357694514686541",
+    "blockNumber": 14160247
+  },
+  {
+    "timestamp": "2026-04-05T03:36:12.000Z",
+    "amountPaid": "1531425758453424",
+    "totalIssuance": "16776608203163855061",
+    "blockNumber": 14199084
+  },
+  {
+    "timestamp": "2026-04-06T03:36:12.000Z",
+    "amountPaid": "1531319381381278",
+    "totalIssuance": "16778148371709076686",
+    "blockNumber": 14236021
+  },
+  {
+    "timestamp": "2026-04-07T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16779593352287581225",
+    "blockNumber": 14274079
+  },
+  {
+    "timestamp": "2026-04-08T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16781189478415413188",
+    "blockNumber": 14311020
+  },
+  {
+    "timestamp": "2026-04-09T03:36:36.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16783023061208291340",
+    "blockNumber": 14348078
+  },
+  {
+    "timestamp": "2026-04-10T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16784264967172244049",
+    "blockNumber": 14386226
+  },
+  {
+    "timestamp": "2026-04-11T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16785913326304402261",
+    "blockNumber": 14424643
+  },
+  {
+    "timestamp": "2026-04-12T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16787304691781020634",
+    "blockNumber": 14463110
+  },
+  {
+    "timestamp": "2026-04-13T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16788722928564336076",
+    "blockNumber": 14501052
+  },
+  {
+    "timestamp": "2026-04-14T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16790608931573311561",
+    "blockNumber": 14539024
+  },
+  {
+    "timestamp": "2026-04-15T03:36:36.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16792078333434666483",
+    "blockNumber": 14576901
+  },
+  {
+    "timestamp": "2026-04-16T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16793498806767818817",
+    "blockNumber": 14613747
+  },
+  {
+    "timestamp": "2026-04-17T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16795153824129798407",
+    "blockNumber": 14651121
+  },
+  {
+    "timestamp": "2026-04-18T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16797249180050600928",
+    "blockNumber": 14687851
+  },
+  {
+    "timestamp": "2026-04-19T03:36:24.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16798404157281366831",
+    "blockNumber": 14724812
+  },
+  {
+    "timestamp": "2026-04-20T03:36:12.000Z",
+    "amountPaid": "1531319416828486",
+    "totalIssuance": "16799694559772844987",
+    "blockNumber": 14762185
+  },
+  {
+    "timestamp": "2026-04-21T03:36:12.000Z",
+    "amountPaid": "1531319381381278",
+    "totalIssuance": "16801207968196465762",
+    "blockNumber": 14798757
+  },
+  {
+    "timestamp": "2026-04-22T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16802968537999600985",
+    "blockNumber": 14835917
+  },
+  {
+    "timestamp": "2026-04-23T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16804511937995875309",
+    "blockNumber": 14872825
+  },
+  {
+    "timestamp": "2026-04-24T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16805851683608176522",
+    "blockNumber": 14911031
+  },
+  {
+    "timestamp": "2026-04-25T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16807439339057087250",
+    "blockNumber": 14951744
+  },
+  {
+    "timestamp": "2026-04-26T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16809040327781805927",
+    "blockNumber": 14993166
+  },
+  {
+    "timestamp": "2026-04-27T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16810452021271415633",
+    "blockNumber": 15034481
+  },
+  {
+    "timestamp": "2026-04-28T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16812562720548103264",
+    "blockNumber": 15076160
+  },
+  {
+    "timestamp": "2026-04-29T03:36:24.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16813786281335737784",
+    "blockNumber": 15115610
+  },
+  {
+    "timestamp": "2026-04-30T03:36:24.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16815340151344021302",
+    "blockNumber": 15154603
+  },
+  {
+    "timestamp": "2026-05-01T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16816643483333592845",
+    "blockNumber": 15194641
+  },
+  {
+    "timestamp": "2026-05-02T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16818111463364275734",
+    "blockNumber": 15235941
+  },
+  {
+    "timestamp": "2026-05-03T03:36:24.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16819757403788124293",
+    "blockNumber": 15276803
+  },
+  {
+    "timestamp": "2026-05-04T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16821137676361663497",
+    "blockNumber": 15317759
+  },
+  {
+    "timestamp": "2026-05-05T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16822919294464184349",
+    "blockNumber": 15358221
+  },
+  {
+    "timestamp": "2026-05-06T03:36:12.000Z",
+    "amountPaid": "1531319416828486",
+    "totalIssuance": "16824304814207354294",
+    "blockNumber": 15399973
+  },
+  {
+    "timestamp": "2026-05-07T03:36:24.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16826087070636484560",
+    "blockNumber": 15439922
+  },
+  {
+    "timestamp": "2026-05-08T03:36:12.000Z",
+    "amountPaid": "1531319381381278",
+    "totalIssuance": "16827411825210209671",
+    "blockNumber": 15479762
+  },
+  {
+    "timestamp": "2026-05-09T03:36:36.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16828752992372728136",
+    "blockNumber": 15521089
+  },
+  {
+    "timestamp": "2026-05-10T03:36:24.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16830386856400911078",
+    "blockNumber": 15563482
+  },
+  {
+    "timestamp": "2026-05-11T03:36:12.000Z",
+    "amountPaid": "1531319416828486",
+    "totalIssuance": "16831823159564122840",
+    "blockNumber": 15605241
+  },
+  {
+    "timestamp": "2026-05-12T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16833718344709704600",
+    "blockNumber": 15647756
+  },
+  {
+    "timestamp": "2026-05-13T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16835198085162540819",
+    "blockNumber": 15689957
+  },
+  {
+    "timestamp": "2026-05-14T03:36:12.000Z",
+    "amountPaid": "1531319381381278",
+    "totalIssuance": "16836866223486294886",
+    "blockNumber": 15732134
+  },
+  {
+    "timestamp": "2026-05-15T03:36:24.000Z",
+    "amountPaid": "1531319416828486",
+    "totalIssuance": "16838251289925425737",
+    "blockNumber": 15774463
+  },
+  {
+    "timestamp": "2026-05-16T03:36:24.000Z",
+    "amountPaid": "1531319381381278",
+    "totalIssuance": "16839801788703716443",
+    "blockNumber": 15815581
+  },
+  {
+    "timestamp": "2026-05-17T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16841145227725195871",
+    "blockNumber": 15858196
+  },
+  {
+    "timestamp": "2026-05-18T03:36:24.000Z",
+    "amountPaid": "1531319416828486",
+    "totalIssuance": "16842599268381765386",
+    "blockNumber": 15900918
+  },
+  {
+    "timestamp": "2026-05-19T03:36:12.000Z",
+    "amountPaid": "1531319381381278",
+    "totalIssuance": "16844428141235969365",
+    "blockNumber": 15943321
+  },
+  {
+    "timestamp": "2026-05-20T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16845747585040449797",
+    "blockNumber": 15985401
+  },
+  {
+    "timestamp": "2026-05-21T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16847303193119046527",
+    "blockNumber": 16027215
+  },
+  {
+    "timestamp": "2026-05-22T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16848913167247107743",
+    "blockNumber": 16068987
+  },
+  {
+    "timestamp": "2026-05-23T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16850369510894408013",
+    "blockNumber": 16110964
+  },
+  {
+    "timestamp": "2026-05-24T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16851880296312697576",
+    "blockNumber": 16152490
+  },
+  {
+    "timestamp": "2026-05-25T03:36:12.000Z",
+    "amountPaid": "1531319399104882",
+    "totalIssuance": "16853177936022616071",
+    "blockNumber": 16194448
+  }
+]
