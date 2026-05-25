@@ -1,0 +1,7 @@
+all:
+  hosts:
+    dotless:
+      ansible_host: 82.165.217.34
+      ansible_user: vados
+      ansible_ssh_private_key_file: ~/.ssh/1und1
+      ansible_python_interpreter: /usr/bin/python3

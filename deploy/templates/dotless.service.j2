@@ -1,0 +1,53 @@
+[Unit]
+Description=Dotless — Polkadot inflation visualizer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_user }}
+WorkingDirectory={{ app_install_dir }}
+
+# Default env; override per-host by writing key=value lines into the file below.
+EnvironmentFile=-{{ app_config_dir }}/env
+Environment=PORT={{ app_port }}
+Environment=LIVE_EVENTS_PATH={{ app_state_dir }}/live_events.json
+Environment=RUST_LOG={{ app_rust_log }}
+
+ExecStart={{ app_install_dir }}/{{ app_name }}
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=15s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier={{ app_name }}
+
+# --- Sandboxing ---
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ app_state_dir }}
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0027
+
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

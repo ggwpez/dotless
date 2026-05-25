@@ -1,0 +1,314 @@
+---
+- name: Deploy dotless
+  hosts: dotless
+  become: true
+  gather_facts: true
+
+  vars:
+    # --- Application ---
+    app_name:         dotless
+    app_user:         dotless
+    app_domain:       dotless.xyz
+    app_port:         8080
+    app_install_dir:  /opt/dotless
+    app_src_dir:      /opt/dotless/src
+    app_state_dir:    /var/lib/dotless
+    app_config_dir:   /etc/dotless
+    app_rust_log:     dotless=info
+
+    # --- Rust toolchain (lives under the app user, off /usr) ---
+    rust_home:        /opt/dotless/.rustup
+    cargo_home:       /opt/dotless/.cargo
+    rust_channel:     stable
+
+    # --- Caddy ---
+    caddy_acme_email: oliver.tale-yazdi@parity.io
+
+    # Resolved on the controller. `playbook_dir` is .../dotless/deploy.
+    local_project_root: "{{ playbook_dir | dirname }}"
+
+  pre_tasks:
+    - name: Assert Debian/Ubuntu host
+      ansible.builtin.assert:
+        that: ansible_os_family == "Debian"
+        fail_msg: "This playbook targets Debian/Ubuntu hosts only."
+      tags: always
+
+  tasks:
+    # ────────────────────────────────────────────────────────────────
+    # 1. Base prep: packages, app user, directories
+    # ────────────────────────────────────────────────────────────────
+    - name: Refresh apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      tags: [prep, caddy]
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name:
+          - acl
+          - apt-transport-https
+          - build-essential
+          - ca-certificates
+          - curl
+          - debian-archive-keyring
+          - debian-keyring
+          - git
+          - gnupg
+          - libssl-dev
+          - pkg-config
+          - rsync
+        state: present
+      tags: [prep, caddy]
+
+    - name: Create app system user "{{ app_user }}"
+      ansible.builtin.user:
+        name: "{{ app_user }}"
+        system: true
+        shell: /usr/sbin/nologin
+        home: "{{ app_install_dir }}"
+        create_home: false
+      tags: [prep]
+
+    - name: Create app directories
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: "{{ item.owner | default(app_user) }}"
+        group: "{{ item.group | default(app_user) }}"
+        mode:  "{{ item.mode  | default('0755') }}"
+      loop:
+        - { path: "{{ app_install_dir }}" }
+        - { path: "{{ app_src_dir }}" }
+        - { path: "{{ app_state_dir }}",  mode: "0750" }
+        - { path: "{{ app_config_dir }}", owner: root, group: root, mode: "0755" }
+      tags: [prep]
+
+    # ────────────────────────────────────────────────────────────────
+    # 2. Rust toolchain (installed under the app user, kept off the system)
+    # ────────────────────────────────────────────────────────────────
+    - name: Stat existing rustc
+      ansible.builtin.stat:
+        path: "{{ cargo_home }}/bin/rustc"
+      register: rustc_stat
+      tags: [rust, build]
+
+    - name: Install rustup ({{ rust_channel }}, minimal profile)
+      become_user: "{{ app_user }}"
+      ansible.builtin.shell: |
+        set -eu
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+          | sh -s -- -y --no-modify-path \
+              --default-toolchain {{ rust_channel }} \
+              --profile minimal
+      args:
+        creates: "{{ cargo_home }}/bin/rustc"
+      environment:
+        RUSTUP_HOME: "{{ rust_home }}"
+        CARGO_HOME:  "{{ cargo_home }}"
+      when: not rustc_stat.stat.exists
+      tags: [rust, build]
+
+    - name: Keep rust toolchain current
+      become_user: "{{ app_user }}"
+      ansible.builtin.command:
+        cmd: "{{ cargo_home }}/bin/rustup update {{ rust_channel }}"
+      environment:
+        RUSTUP_HOME: "{{ rust_home }}"
+        CARGO_HOME:  "{{ cargo_home }}"
+      register: rustup_update
+      changed_when: "'unchanged' not in (rustup_update.stdout | default(''))"
+      tags: [rust]
+
+    # ────────────────────────────────────────────────────────────────
+    # 3. Source sync → build → install binary + static assets
+    # ────────────────────────────────────────────────────────────────
+    # rsync runs as root on the remote so it can write into the
+    # dotless-owned src dir; we re-chown after.
+    - name: Sync source tree to {{ app_src_dir }}
+      ansible.posix.synchronize:
+        src:        "{{ local_project_root }}/"
+        dest:       "{{ app_src_dir }}/"
+        recursive:  true
+        delete:     true
+        rsync_opts:
+          - "--exclude=.git/"
+          - "--exclude=target/"
+          - "--exclude=node_modules/"
+          - "--exclude=.DS_Store"
+          - "--exclude=.replit"
+          - "--exclude=replit.nix"
+          - "--exclude=live_events.json"
+          - "--exclude=deploy/"
+        rsync_path: "sudo -n rsync"
+      become: false
+      register: src_sync
+      tags: [build]
+
+    - name: Set source tree ownership to {{ app_user }}
+      ansible.builtin.file:
+        path:    "{{ app_src_dir }}"
+        state:   directory
+        owner:   "{{ app_user }}"
+        group:   "{{ app_user }}"
+        recurse: true
+      tags: [build]
+
+    - name: Build release binary (cargo build --release --locked)
+      become_user: "{{ app_user }}"
+      ansible.builtin.command:
+        cmd:   "{{ cargo_home }}/bin/cargo build --release --locked"
+        chdir: "{{ app_src_dir }}"
+      environment:
+        RUSTUP_HOME: "{{ rust_home }}"
+        CARGO_HOME:  "{{ cargo_home }}"
+        PATH:        "{{ cargo_home }}/bin:/usr/bin:/bin"
+      register: cargo_build
+      # "Compiling …" only appears when cargo actually compiled something;
+      # otherwise the task is no-op-changed=false.
+      changed_when: >-
+        ('Compiling ' in (cargo_build.stderr | default(''))) or
+        ('Compiling ' in (cargo_build.stdout | default('')))
+      tags: [build]
+
+    - name: Install built binary to {{ app_install_dir }}/{{ app_name }}
+      ansible.builtin.copy:
+        src:        "{{ app_src_dir }}/target/release/{{ app_name }}"
+        dest:       "{{ app_install_dir }}/{{ app_name }}"
+        remote_src: true
+        owner:      "{{ app_user }}"
+        group:      "{{ app_user }}"
+        mode:       "0755"
+      notify: restart dotless
+      tags: [build]
+
+    - name: Install static assets to runtime dir
+      ansible.builtin.command:
+        cmd: >-
+          rsync -a --delete --itemize-changes
+          --chown={{ app_user }}:{{ app_user }}
+          {{ app_src_dir }}/static/
+          {{ app_install_dir }}/static/
+      register: static_install
+      changed_when: static_install.stdout | length > 0
+      tags: [build]
+
+    - name: Seed live_events.json (first deploy only — never overwrites server state)
+      ansible.builtin.copy:
+        src:   "{{ local_project_root }}/live_events.json"
+        dest:  "{{ app_state_dir }}/live_events.json"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode:  "0640"
+        force: false
+      tags: [build]
+
+    # ────────────────────────────────────────────────────────────────
+    # 4. systemd unit
+    # ────────────────────────────────────────────────────────────────
+    - name: Render dotless.service unit
+      ansible.builtin.template:
+        src:   dotless.service.j2
+        dest:  /etc/systemd/system/dotless.service
+        owner: root
+        group: root
+        mode:  "0644"
+      notify: restart dotless
+      tags: [service]
+
+    - name: Enable and start dotless
+      ansible.builtin.systemd:
+        name:          dotless
+        enabled:       true
+        state:         started
+        daemon_reload: true
+      tags: [service]
+
+    # ────────────────────────────────────────────────────────────────
+    # 5. Caddy (reverse proxy + auto-TLS)
+    # ────────────────────────────────────────────────────────────────
+    - name: Ensure /etc/apt/keyrings exists
+      ansible.builtin.file:
+        path:  /etc/apt/keyrings
+        state: directory
+        owner: root
+        group: root
+        mode:  "0755"
+      tags: [caddy]
+
+    - name: Install Caddy GPG key (armored)
+      ansible.builtin.get_url:
+        url:   https://dl.cloudsmith.io/public/caddy/stable/gpg.key
+        dest:  /etc/apt/keyrings/caddy-stable.asc
+        owner: root
+        group: root
+        mode:  "0644"
+      tags: [caddy]
+
+    - name: Add Caddy apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/caddy-stable.asc] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main"
+        filename: caddy-stable
+        state: present
+        update_cache: true
+      tags: [caddy]
+
+    - name: Install Caddy
+      ansible.builtin.apt:
+        name:  caddy
+        state: present
+      tags: [caddy]
+
+    # Caddy logs go to stderr → systemd-journal (no file logging),
+    # so we don't need /var/log/caddy. Remove any stale access.log
+    # left over from earlier configurations (would otherwise be owned
+    # by root and break reloads if file logging is ever re-enabled).
+    - name: Remove stale Caddy access log (legacy)
+      ansible.builtin.file:
+        path:  /var/log/caddy/access.log
+        state: absent
+      tags: [caddy]
+
+    - name: Render Caddyfile
+      ansible.builtin.template:
+        src:   Caddyfile.j2
+        dest:  /etc/caddy/Caddyfile
+        owner: root
+        group: root
+        mode:  "0644"
+        validate: "caddy validate --adapter caddyfile --config %s"
+      notify: reload caddy
+      tags: [caddy]
+
+    - name: Enable and start Caddy
+      ansible.builtin.systemd:
+        name:    caddy
+        enabled: true
+        state:   started
+      tags: [caddy]
+
+    # ────────────────────────────────────────────────────────────────
+    # 6. Firewall — open 80/443 (SSH already allowed by host setup)
+    # ────────────────────────────────────────────────────────────────
+    - name: Allow HTTP/HTTPS in ufw
+      community.general.ufw:
+        rule:  allow
+        port:  "{{ item }}"
+        proto: tcp
+      loop:
+        - "80"
+        - "443"
+      tags: [firewall]
+
+  handlers:
+    - name: restart dotless
+      ansible.builtin.systemd:
+        name:          dotless
+        state:         restarted
+        daemon_reload: true
+
+    - name: reload caddy
+      ansible.builtin.systemd:
+        name:  caddy
+        state: reloaded

@@ -1,0 +1,17 @@
+{
+    email {{ caddy_acme_email }}
+}
+
+{{ app_domain }}, www.{{ app_domain }} {
+    @www host www.{{ app_domain }}
+    redir @www https://{{ app_domain }}{uri} permanent
+
+    encode zstd gzip
+
+    reverse_proxy 127.0.0.1:{{ app_port }}
+
+    log {
+        output stderr
+        format console
+    }
+}
