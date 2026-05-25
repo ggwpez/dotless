@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 </head>
+
 <body>
     <div class="container">
         <h1 class="title gradient-text">Polkadot Issuance Model</h1>
@@ -46,7 +48,8 @@
 
             <h3>Stepped Issuance</h3>
             <p>
-                The new model issues <span class="highlight">26.28% of the remaining distance to the cap every two years</span>
+                The new model issues <span class="highlight">26.28% of the remaining distance to the cap every two
+                    years</span>
                 (equivalent to ~13.14%/year). This works out to ~56M DOT/year in the first period
                 (March 2026 - March 2028), an initial ~53.6% reduction compared to the previous year.
             </p>
@@ -70,155 +73,156 @@
     </footer>
 
     <script>
-    const allData = {{ all_chart_data_json|safe }};
-    let currentYears = 5;
-    let chart = null;
+        const allData = {{ all_chart_data_json| safe }};
+        let currentYears = 5;
+        let chart = null;
 
-    function formatNumber(value) {
-        if (value >= 1e9) return (value / 1e9).toPrecision(3) + 'B';
-        if (value >= 1e6) return (value / 1e6).toPrecision(3) + 'M';
-        if (value >= 1e3) return (value / 1e3).toPrecision(3) + 'K';
-        return value.toPrecision(3);
-    }
+        function formatNumber(value) {
+            if (value >= 1e9) return (value / 1e9).toPrecision(3) + 'B';
+            if (value >= 1e6) return (value / 1e6).toPrecision(3) + 'M';
+            if (value >= 1e3) return (value / 1e3).toPrecision(3) + 'K';
+            return value.toPrecision(3);
+        }
 
-    function projectedSegment(points, solidColor, fadedColor) {
-        const projStart = points.findIndex(p => p.is_projected);
-        return {
-            segment: {
-                borderColor: ctx => ctx.p0DataIndex >= projStart - 1 ? fadedColor : solidColor,
-                borderDash: ctx => ctx.p0DataIndex >= projStart - 1 ? [6, 3] : [],
-            },
-        };
-    }
-
-    function renderChart(years) {
-        const chartData = allData[years];
-        if (!chartData) return;
-
-        currentYears = years;
-
-        if (chart) chart.destroy();
-
-        const ctx = document.getElementById('inflationChart').getContext('2d');
-        chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: chartData.points.map(p => p.timestamp),
-                datasets: [
-                    {
-                        label: 'Issuance Rate (%)',
-                        data: chartData.points.map(p => p.inflation_rate),
-                        borderColor: '#2680FF',
-                        backgroundColor: 'rgba(38,128,255,0.1)',
-                        borderWidth: 3,
-                        pointRadius: 0,
-                        yAxisID: 'yRate',
-                        tension: 0,
-                        ...projectedSegment(chartData.points, '#2680FF', 'rgba(38,128,255,0.35)'),
-                    },
-                    {
-                        label: 'Supply (DOT)',
-                        data: chartData.points.map(p => p.supply),
-                        borderColor: '#26FF80',
-                        backgroundColor: 'rgba(38,255,128,0.1)',
-                        borderWidth: 3,
-                        pointRadius: 0,
-                        yAxisID: 'ySupply',
-                        tension: 0.3,
-                        ...projectedSegment(chartData.points, '#26FF80', 'rgba(38,255,128,0.35)'),
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
+        function projectedSegment(points, solidColor, fadedColor) {
+            const projStart = points.findIndex(p => p.is_projected);
+            return {
+                segment: {
+                    borderColor: ctx => ctx.p0DataIndex >= projStart - 1 ? fadedColor : solidColor,
+                    borderDash: ctx => ctx.p0DataIndex >= projStart - 1 ? [6, 3] : [],
                 },
-                plugins: {
-                    legend: {
-                        labels: { color: '#fff' },
+            };
+        }
+
+        function renderChart(years) {
+            const chartData = allData[years];
+            if (!chartData) return;
+
+            currentYears = years;
+
+            if (chart) chart.destroy();
+
+            const ctx = document.getElementById('inflationChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.points.map(p => p.timestamp),
+                    datasets: [
+                        {
+                            label: 'Issuance Rate (%)',
+                            data: chartData.points.map(p => p.inflation_rate),
+                            borderColor: '#2680FF',
+                            backgroundColor: 'rgba(38,128,255,0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            yAxisID: 'yRate',
+                            tension: 0,
+                            ...projectedSegment(chartData.points, '#2680FF', 'rgba(38,128,255,0.35)'),
+                        },
+                        {
+                            label: 'Supply (DOT)',
+                            data: chartData.points.map(p => p.supply),
+                            borderColor: '#26FF80',
+                            backgroundColor: 'rgba(38,255,128,0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            yAxisID: 'ySupply',
+                            tension: 0.3,
+                            ...projectedSegment(chartData.points, '#26FF80', 'rgba(38,255,128,0.35)'),
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
                     },
-                    tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.9)',
-                        borderColor: '#E6007A',
-                        borderWidth: 1,
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        callbacks: {
-                            title: function(items) {
-                                const raw = chartData.points[items[0].dataIndex]?.timestamp;
-                                if (!raw) return '';
-                                return new Date(raw).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                            },
-                            label: function(context) {
-                                if (context.datasetIndex === 0) {
-                                    return 'Issuance Rate: ' + context.parsed.y.toFixed(3) + '%';
-                                }
-                                return 'Supply: ' + formatNumber(context.parsed.y) + ' DOT';
-                            },
-                            afterBody: function(items) {
-                                const point = chartData.points[items[0].dataIndex];
-                                if (!point) return '';
-                                return 'Daily Issuance: ' + formatNumber(point.daily_issuance) + ' DOT';
+                    plugins: {
+                        legend: {
+                            labels: { color: '#fff' },
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.9)',
+                            borderColor: '#E6007A',
+                            borderWidth: 1,
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            callbacks: {
+                                title: function (items) {
+                                    const raw = chartData.points[items[0].dataIndex]?.timestamp;
+                                    if (!raw) return '';
+                                    return new Date(raw).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                                },
+                                label: function (context) {
+                                    if (context.datasetIndex === 0) {
+                                        return 'Issuance Rate: ' + context.parsed.y.toFixed(3) + '%';
+                                    }
+                                    return 'Supply: ' + formatNumber(context.parsed.y) + ' DOT';
+                                },
+                                afterBody: function (items) {
+                                    const point = chartData.points[items[0].dataIndex];
+                                    if (!point) return '';
+                                    return 'Daily Issuance: ' + formatNumber(point.daily_issuance) + ' DOT';
+                                },
                             },
                         },
                     },
-                },
-                scales: {
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'month',
-                            displayFormats: { month: 'MMM yyyy' },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'month',
+                                displayFormats: { month: 'MMM yyyy' },
+                            },
+                            ticks: { color: '#fff', maxTicksLimit: 12 },
+                            grid: { color: 'rgba(230,0,122,0.15)' },
                         },
-                        ticks: { color: '#fff', maxTicksLimit: 12 },
-                        grid: { color: 'rgba(230,0,122,0.15)' },
-                    },
-                    yRate: {
-                        type: 'linear',
-                        position: 'left',
-                        title: { display: true, text: 'Issuance (%)', color: '#fff' },
-                        ticks: { color: '#fff' },
-                        grid: { color: 'rgba(230,0,122,0.15)' },
-                    },
-                    ySupply: {
-                        type: 'linear',
-                        position: 'right',
-                        title: { display: true, text: 'Supply (DOT)', color: '#fff' },
-                        ticks: {
-                            color: '#fff',
-                            callback: function(value) { return formatNumber(value); },
+                        yRate: {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: 'Issuance (%)', color: '#fff' },
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(230,0,122,0.15)' },
                         },
-                        grid: { drawOnChartArea: false },
+                        ySupply: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: 'Supply (DOT)', color: '#fff' },
+                            ticks: {
+                                color: '#fff',
+                                callback: function (value) { return formatNumber(value); },
+                            },
+                            grid: { drawOnChartArea: false },
+                        },
                     },
                 },
-            },
+            });
+        }
+
+        // Toggle buttons
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                renderChart(Number(this.dataset.years));
+            });
         });
-    }
 
-    // Toggle buttons
-    document.querySelectorAll('.toggle-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            renderChart(Number(this.dataset.years));
-        });
-    });
+        // Initial render
+        renderChart(5);
 
-    // Initial render
-    renderChart(5);
-
-    // Data freshness
-    const lastTs = '{{ last_event_ts }}';
-    const el = document.getElementById('freshness');
-    if (lastTs) {
-        const ageHrs = (Date.now() - new Date(lastTs).getTime()) / 3.6e6;
-        const fresh = ageHrs < 25;
-        el.className = fresh ? 'fresh' : 'stale';
-        el.textContent = fresh ? 'Data is fresh' : 'Data may be stale';
-    }
+        // Data freshness
+        const lastTs = '{{ last_event_ts }}';
+        const el = document.getElementById('freshness');
+        if (lastTs) {
+            const ageHrs = (Date.now() - new Date(lastTs).getTime()) / 3.6e6;
+            const fresh = ageHrs < 25;
+            el.className = fresh ? 'fresh' : 'stale';
+            el.textContent = fresh ? 'Data is fresh' : 'Data may be stale';
+        }
     </script>
 </body>
+
 </html>

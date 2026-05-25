@@ -1,5 +1,6 @@
 mod data;
 mod inflation;
+mod ingest;
 
 use askama::Template;
 use axum::{
@@ -12,10 +13,9 @@ use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
 use tower_http::services::ServeDir;
 
-struct AppState {
-    cached_events: RwLock<Vec<data::EraPaid>>,
-    chart_cache: RwLock<inflation::ChartCache>,
-    http_client: reqwest::Client,
+pub(crate) struct AppState {
+    pub(crate) cached_events: RwLock<Vec<data::EraPaid>>,
+    pub(crate) chart_cache: RwLock<inflation::ChartCache>,
 }
 
 #[derive(askama::Template)]
@@ -56,77 +56,38 @@ async fn main() {
         )
         .init();
 
-    let http_client = reqwest::Client::new();
-
-    // Load historical data from JSON, then fetch newer events from GraphQL
-    let mut events = data::load_events_from_json("era_paid_events.json");
-    tracing::info!("Loaded {} events from era_paid_events.json", events.len());
-
-    let last_ts = events.last().map(|e| e.timestamp.as_str());
-    tracing::info!("Fetching EraPaid events after {last_ts:?}...");
-    match data::fetch_era_paid_events(&http_client, last_ts).await {
-        Ok(new) => {
-            tracing::info!("Fetched {} new events from GraphQL", new.len());
-            events.extend(new);
-        }
-        Err(e) => tracing::error!("Failed to fetch from GraphQL: {e}"),
-    }
-    tracing::info!("Total: {} EraPaid events", events.len());
+    // Previously ingested Asset Hub events; the background ingestor syncs the
+    // rest from chain. Everything the chart shows is >= 2026-01-01 (the display
+    // cutoff), so the pre-2026 relay-chain history is not loaded.
+    let live_path = std::env::var("LIVE_EVENTS_PATH").unwrap_or_else(|_| "live_events.json".into());
+    let events = data::load_events_from_json(&live_path);
+    tracing::info!("Loaded {} live events from {live_path}", events.len());
     if let Some(last) = events.last() {
         tracing::info!("Latest EraPaid: {}", last.timestamp);
     }
 
-    // Build chart cache once on startup
+    // Build chart cache once on startup; the ingestor appends to it as it syncs.
     let chart_cache = inflation::ChartCache::new(&events);
     tracing::info!("Chart cache built for {:?}", inflation::SUPPORTED_YEARS);
 
     let state = Arc::new(AppState {
         cached_events: RwLock::new(events),
         chart_cache: RwLock::new(chart_cache),
-        http_client,
     });
 
-    spawn_data_refresher(state.clone());
+    ingest::spawn(state.clone());
 
     let app = Router::new()
         .route("/", get(index_handler))
         .nest_service("/static", ServeDir::new("static"))
         .with_state(state);
 
-    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 8080));
+    let port: u16 = std::env::var("PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(8080);
+    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
     tracing::info!("Listening on http://{addr}");
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
-}
-
-/// Refresh cached EraPaid events every 10 minutes.
-fn spawn_data_refresher(state: Arc<AppState>) {
-    tokio::spawn(async move {
-        let mut interval = tokio::time::interval(std::time::Duration::from_secs(600));
-        interval.tick().await; // skip immediate first tick
-        loop {
-            interval.tick().await;
-            let last_ts = state
-                .cached_events
-                .read()
-                .await
-                .last()
-                .map(|e| e.timestamp.clone());
-            tracing::info!("Fetching EraPaid events after {last_ts:?}...");
-            match data::fetch_era_paid_events(&state.http_client, last_ts.as_deref()).await {
-                Ok(new_events) => {
-                    let count = new_events.len();
-                    if count > 0 {
-                        let mut events = state.cached_events.write().await;
-                        events.extend(new_events);
-                        state.chart_cache.write().await.append(&events);
-                        tracing::info!("Appended {count} new EraPaid events, chart cache updated");
-                    } else {
-                        tracing::info!("No new EraPaid events");
-                    }
-                }
-                Err(e) => tracing::error!("Failed to refresh data: {e}"),
-            }
-        }
-    });
 }

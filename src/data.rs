@@ -6,6 +6,10 @@ pub struct EraPaid {
     pub timestamp: String,
     pub amount_paid: String,
     pub total_issuance: String,
+    /// None for frozen relay-chain history, Some for ingested Asset Hub events.
+    /// Used as the ingestor cursor and to select the live subset for persistence.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub block_number: Option<u64>,
 }
 
 impl EraPaid {
@@ -26,17 +30,6 @@ impl EraPaid {
     }
 }
 
-#[derive(Debug, Deserialize)]
-struct GraphQLResponse {
-    data: GraphQLData,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct GraphQLData {
-    era_paids: Vec<EraPaid>,
-}
-
 pub fn load_events_from_json(path: &str) -> Vec<EraPaid> {
     match std::fs::read_to_string(path) {
         Ok(contents) => serde_json::from_str(&contents).unwrap_or_else(|e| {
@@ -50,33 +43,10 @@ pub fn load_events_from_json(path: &str) -> Vec<EraPaid> {
     }
 }
 
-const DEFAULT_GRAPHQL_URL: &str =
-    "https://dotburned.squids.live/polkadot-issuance-sqd-v2@v1/api/graphql";
-
-pub async fn fetch_era_paid_events(
-    client: &reqwest::Client,
-    after_timestamp: Option<&str>,
-) -> anyhow::Result<Vec<EraPaid>> {
-    let url = std::env::var("SUBSQUID_GRAPHQL_URL").unwrap_or_else(|_| DEFAULT_GRAPHQL_URL.into());
-
-    let where_clause = match after_timestamp {
-        Some(ts) => format!(r#", where: {{ timestamp_gt: "{ts}" }}"#),
-        None => String::new(),
-    };
-
-    let query = serde_json::json!({
-        "query": format!(r#"
-            query {{
-                eraPaids(orderBy: timestamp_ASC{where_clause}) {{
-                    id
-                    timestamp
-                    amountPaid
-                    totalIssuance
-                }}
-            }}
-        "#)
-    });
-
-    let resp: GraphQLResponse = client.post(&url).json(&query).send().await?.json().await?;
-    Ok(resp.data.era_paids)
+/// Persist the ingested Asset Hub events (those carrying a `block_number`).
+pub fn save_live_events(path: &str, events: &[EraPaid]) -> anyhow::Result<()> {
+    let live: Vec<&EraPaid> = events.iter().filter(|e| e.block_number.is_some()).collect();
+    let json = serde_json::to_string_pretty(&live)?;
+    std::fs::write(path, json)?;
+    Ok(())
 }

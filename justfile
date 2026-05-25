@@ -1,12 +1,15 @@
 set dotenv-load
 
-# Run the server
-run:
-    cargo run --release
+# Port the server listens on
+port := "8080"
 
-# Run with debug logging
+# Run the server (listens on :{{port}})
+run:
+    PORT={{port}} cargo run --release
+
+# Run with debug logging (listens on :{{port}})
 debug:
-    RUST_LOG=dotless=debug cargo run --release
+    PORT={{port}} RUST_LOG=dotless=debug cargo run --release
 
 # Check compilation
 check:

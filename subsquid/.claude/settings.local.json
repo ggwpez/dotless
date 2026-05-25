@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "WebFetch(domain:docs.sqd.ai)",
-      "Bash(gh search:*)",
-      "Bash(gh api:*)"
-    ]
-  }
-}
