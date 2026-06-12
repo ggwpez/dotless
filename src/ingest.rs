@@ -23,7 +23,7 @@ use crate::data;
 #[subxt::subxt(runtime_metadata_path = "metadata/asset-hub-polkadot.scale")]
 pub mod ah {}
 
-const DEFAULT_RPC: &str = "wss://asset-hub-polkadot.ibp.network";
+const DEFAULT_RPC: &str = "wss://polkadot-asset-hub-rpc.polkadot.io";
 const DEFAULT_INGEST_START: &str = "2026-01-01";
 const DEFAULT_REFRESH_SECS: u64 = 3600 * 12; // every 10 hours
 const DEFAULT_LIVE_PATH: &str = "live_events.json";
