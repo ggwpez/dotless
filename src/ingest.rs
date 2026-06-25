@@ -7,12 +7,14 @@
 //! boundary block with a binary search over `ActiveEra.index` and read the event
 //! plus `Timestamp::Now` / `Balances::TotalIssuance` there.
 
+use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Context, Result};
 use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use subxt::rpcs::RpcClient;
+use subxt::utils::AccountId32;
 use subxt::{OnlineClient, PolkadotConfig};
 
 use crate::data;
@@ -25,9 +27,15 @@ pub mod ah {}
 
 const DEFAULT_RPC: &str = "wss://polkadot-asset-hub-rpc.polkadot.io";
 const DEFAULT_INGEST_START: &str = "2026-01-01";
-const DEFAULT_REFRESH_SECS: u64 = 3600 * 12; // every 10 hours
+const DEFAULT_REFRESH_SECS: u64 = 3600 * 12; // every 12 hours
 const DEFAULT_LIVE_PATH: &str = "live_events.json";
 const DEFAULT_RPC_INTERVAL_MS: u64 = 50;
+
+/// The DAP buffer account (`PalletId(b"modldap/buff")`) — post-2.3.0, the old
+/// `EraPaid.remainder` treasury share now drips into this account. We snapshot
+/// its balance once per era (≈daily) for monitoring. See
+/// `issuance-monitoring-migration.md`.
+const DAP_BUFFER_SS58: &str = "13UVJyLkAxdQn6zM3GrLGvrFgN9jWneRX2NGvf3u92iunZq1";
 
 /// A decoded `EraPaid` boundary, before conversion to the downstream string type.
 pub struct EraPaidRaw {
@@ -36,6 +44,9 @@ pub struct EraPaidRaw {
     pub timestamp: DateTime<Utc>,
     pub amount_paid: u128,
     pub total_issuance: u128,
+    /// DAP buffer total balance (free + reserved) at the boundary block, `None` if
+    /// the read failed (non-fatal — issuance data is still recorded).
+    pub buffer_balance: Option<u128>,
 }
 
 impl EraPaidRaw {
@@ -45,6 +56,7 @@ impl EraPaidRaw {
             amount_paid: self.amount_paid.to_string(),
             total_issuance: self.total_issuance.to_string(),
             block_number: Some(self.block_number),
+            buffer_balance: self.buffer_balance.map(|b| b.to_string()),
         }
     }
 }
@@ -55,6 +67,8 @@ pub struct Ingestor {
     min_interval: Duration,
     /// Instant of the last gated request; `None` until the first call.
     last_request: tokio::sync::Mutex<Option<tokio::time::Instant>>,
+    /// DAP buffer account, decoded from `DAP_BUFFER_SS58` once at connect.
+    buffer_account: AccountId32,
 }
 
 impl Ingestor {
@@ -69,10 +83,14 @@ impl Ingestor {
             .and_then(|s| s.parse::<u64>().ok())
             .unwrap_or(DEFAULT_RPC_INTERVAL_MS);
 
+        let buffer_account = AccountId32::from_str(DAP_BUFFER_SS58)
+            .map_err(|e| anyhow!("parsing DAP buffer account {DAP_BUFFER_SS58}: {e:?}"))?;
+
         Ok(Self {
             api,
             min_interval: Duration::from_millis(interval_ms),
             last_request: tokio::sync::Mutex::new(None),
+            buffer_account,
         })
     }
 
@@ -207,15 +225,42 @@ impl Ingestor {
             .await?
             .decode()?;
 
+        // Once-per-era (≈daily) DAP buffer check. Non-fatal: a failure here must
+        // not drop the issuance data point, so we record `None` and warn.
+        self.gate().await;
+        let buffer_balance = match at
+            .storage()
+            .fetch(ah::storage().system().account(), (self.buffer_account.clone(),))
+            .await
+        {
+            Ok(v) => match v.decode() {
+                Ok(info) => Some(info.data.free.saturating_add(info.data.reserved)),
+                Err(e) => {
+                    tracing::warn!("ingest: decoding DAP buffer balance at #{block} failed: {e:#}");
+                    None
+                }
+            },
+            Err(e) => {
+                tracing::warn!("ingest: fetching DAP buffer balance at #{block} failed: {e:#}");
+                None
+            }
+        };
+
         let timestamp = DateTime::from_timestamp_millis(ts_ms as i64)
             .ok_or_else(|| anyhow!("invalid timestamp {ts_ms} at block #{block}"))?;
 
+        // `amount_paid` (`validator_payout + remainder`) is the freshly-minted
+        // inflation only pre-2.3.0. From 2.3.0 `remainder` is always 0 and
+        // `validator_payout` is just a staker-pot snapshot, so the inflation layer
+        // switches to the per-era total-issuance delta there (see inflation.rs).
+        // We keep storing it for the cold-start fallback and as a raw record.
         Ok(EraPaidRaw {
             block_number: block,
             era_index: ep.era_index,
             timestamp,
             amount_paid: ep.validator_payout.saturating_add(ep.remainder),
             total_issuance,
+            buffer_balance,
         })
     }
 
@@ -299,6 +344,7 @@ async fn run_cycle(state: &Arc<crate::AppState>) -> Result<()> {
         let raw = ingestor.era_paid_at_block(tv).await?;
         done += 1;
         let era_index = raw.era_index;
+        let buffer_dot = raw.buffer_balance.map(|b| b as f64 / 1e10);
 
         let mut events = state.cached_events.write().await;
         events.push(raw.into_event());
@@ -309,8 +355,12 @@ async fn run_cycle(state: &Arc<crate::AppState>) -> Result<()> {
         let persisted = events.len();
         drop(events);
 
+        let buffer_str = match buffer_dot {
+            Some(b) => format!("DAP buffer {b:.0} DOT"),
+            None => "DAP buffer unavailable".to_string(),
+        };
         tracing::info!(
-            "ingest: era {era_index} @ #{tv} ({done}/{total}) -> {path} ({persisted} events)"
+            "ingest: era {era_index} @ #{tv} ({done}/{total}) -> {path} ({persisted} events); {buffer_str}"
         );
     }
 

@@ -107,15 +107,18 @@ impl ChartCache {
         cache
     }
 
-    /// Incrementally append new events and recompute projections.
+    /// Append new events and recompute projections.
+    ///
+    /// `historical_from_events` derives each post-migration point's daily issuance
+    /// from the previous event's total issuance, so it must see the full ordered
+    /// list (not just the new tail). The series is ~one event/day, so rebuilding
+    /// it wholesale here is cheap and keeps the delta correct across the boundary.
     pub fn append(&mut self, all_events: &[EraPaid]) {
-        let new_events = &all_events[self.events_processed..];
-        if new_events.is_empty() {
+        if all_events.len() <= self.events_processed {
             return;
         }
-        let new_points = Self::historical_from_events(new_events);
-        self.historical.extend(new_points);
         self.events_processed = all_events.len();
+        self.historical = Self::historical_from_events(all_events);
         for &years in SUPPORTED_YEARS {
             self.charts.insert(years, build_chart_data(&self.historical, years as f64));
         }
@@ -127,25 +130,52 @@ impl ChartCache {
 
     fn historical_from_events(events: &[EraPaid]) -> Vec<ChartPoint> {
         let cutoff = display_cutoff();
-        events
-            .iter()
-            .filter_map(|event| {
-                let ts = parse_timestamp(&event.timestamp);
-                if ts.date() < cutoff {
-                    return None;
-                }
-                let daily_increase = event.amount_paid_dot();
-                let issuance = event.total_issuance_dot();
-                let inflation_rate = (daily_increase / issuance) * DAYS_PER_YEAR * 100.0;
-                Some(ChartPoint {
-                    timestamp: event.timestamp.clone(),
-                    inflation_rate,
-                    supply: issuance,
-                    daily_issuance: daily_increase,
-                    is_projected: false,
-                })
-            })
-            .collect()
+        let mut points = Vec::new();
+        for (i, event) in events.iter().enumerate() {
+            let ts = parse_timestamp(&event.timestamp);
+            if ts.date() < cutoff {
+                continue;
+            }
+            let issuance = event.total_issuance_dot();
+
+            // Daily new issuance = staker share + treasury-equivalent share.
+            //
+            // `amount_paid` (`validator_payout + remainder`) always carries the
+            // staker share, and pre-2.3.0 it carried the treasury share too (via
+            // `remainder`). From the 2.3.0 DAP migration `remainder` is 0 and the
+            // treasury share instead drips into the DAP buffer account, so we add
+            // the per-era growth of the buffer balance back in.
+            //
+            // This is both correct and smooth: deriving issuance from the per-era
+            // delta of *total* issuance instead is noisy (it also moves with fee
+            // burns and other flows), whereas `validator_payout` and the buffer are
+            // clean snapshots. When the split visibly switched on (validator_payout
+            // shrank to just the staker pot), the buffer began absorbing the rest by
+            // an equal amount, so the sum stays flat across the boundary.
+            // Pre-buffer-tracking events have `buffer_balance == None`, making the
+            // delta 0 and leaving `amount_paid` unchanged. See
+            // issuance-monitoring-migration.md.
+            let buffer_delta = match (
+                event.buffer_balance_dot(),
+                i.checked_sub(1).and_then(|j| events[j].buffer_balance_dot()),
+            ) {
+                // `max(0)` guards against the buffer being drained/spent (a treasury
+                // outflow is not negative inflation).
+                (Some(cur), Some(prev)) => (cur - prev).max(0.0),
+                _ => 0.0,
+            };
+            let daily_increase = event.amount_paid_dot() + buffer_delta;
+
+            let inflation_rate = (daily_increase / issuance) * DAYS_PER_YEAR * 100.0;
+            points.push(ChartPoint {
+                timestamp: event.timestamp.clone(),
+                inflation_rate,
+                supply: issuance,
+                daily_issuance: daily_increase,
+                is_projected: false,
+            });
+        }
+        points
     }
 }
 

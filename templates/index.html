@@ -69,6 +69,7 @@
 
     <footer class="footer">
         <span id="freshness"></span>
+        <span id="dapBuffer"></span>
         <a href="https://github.com/ggwpez/dotless" target="_blank" class="footer-link">Source Code (v4)</a>
     </footer>
 
@@ -221,6 +222,13 @@
             const fresh = ageHrs < 25;
             el.className = fresh ? 'fresh' : 'stale';
             el.textContent = fresh ? 'Data is fresh' : 'Data may be stale';
+        }
+
+        // DAP buffer balance (post-2.3.0 treasury-equivalent share sink), checked daily
+        const dapBuffer = '{{ dap_buffer_dot }}';
+        const dapEl = document.getElementById('dapBuffer');
+        if (dapBuffer) {
+            dapEl.textContent = 'DAP buffer: ' + formatNumber(Number(dapBuffer)) + ' DOT';
         }
     </script>
 </body>

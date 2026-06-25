@@ -23,6 +23,8 @@ pub(crate) struct AppState {
 struct IndexTemplate {
     all_chart_data_json: String,
     last_event_ts: String,
+    /// Latest recorded DAP buffer balance in DOT (plain number), or empty.
+    dap_buffer_dot: String,
 }
 
 async fn index_handler(
@@ -35,15 +37,19 @@ async fn index_handler(
         .collect();
     let all_chart_data_json = serde_json::to_string(&all).unwrap_or_else(|_| "{}".into());
 
-    let last_event_ts = state
-        .cached_events
-        .read()
-        .await
-        .last()
-        .map(|e| e.timestamp.clone())
-        .unwrap_or_default();
+    let (last_event_ts, dap_buffer_dot) = {
+        let events = state.cached_events.read().await;
+        let ts = events.last().map(|e| e.timestamp.clone()).unwrap_or_default();
+        let buffer = events
+            .iter()
+            .rev()
+            .find_map(|e| e.buffer_balance_dot())
+            .map(|v| format!("{v}"))
+            .unwrap_or_default();
+        (ts, buffer)
+    };
 
-    let template = IndexTemplate { all_chart_data_json, last_event_ts };
+    let template = IndexTemplate { all_chart_data_json, last_event_ts, dap_buffer_dot };
     Html(template.render().unwrap_or_else(|e| format!("Template error: {e}")))
 }
 

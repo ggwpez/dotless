@@ -10,6 +10,12 @@ pub struct EraPaid {
     /// Used as the ingestor cursor and to select the live subset for persistence.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub block_number: Option<u64>,
+    /// Total balance (plancks, free + reserved) of the DAP buffer account at the
+    /// boundary block — the post-2.3.0 treasury-equivalent share sink
+    /// (`13UVJyLkAxdQn6zM3GrLGvrFgN9jWneRX2NGvf3u92iunZq1`). Checked once per era
+    /// (≈daily). None for frozen history / events ingested before buffer monitoring.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub buffer_balance: Option<String>,
 }
 
 impl EraPaid {
@@ -27,6 +33,14 @@ impl EraPaid {
             .parse::<f64>()
             .unwrap_or(0.0)
             / 1e10
+    }
+
+    /// DAP buffer account total balance in DOT (divided by 1e10), if recorded.
+    pub fn buffer_balance_dot(&self) -> Option<f64> {
+        self.buffer_balance
+            .as_ref()
+            .and_then(|s| s.parse::<f64>().ok())
+            .map(|v| v / 1e10)
     }
 }
 
