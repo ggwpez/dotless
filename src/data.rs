@@ -6,6 +6,9 @@ pub struct EraPaid {
     pub timestamp: String,
     pub amount_paid: String,
     pub total_issuance: String,
+    /// Runtime `Inflation` API daily mint (planck); `None` pre-v2.3.0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub daily_mint: Option<String>,
     /// None for frozen relay-chain history, Some for ingested Asset Hub events.
     /// Used as the ingestor cursor and to select the live subset for persistence.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -27,6 +30,13 @@ impl EraPaid {
             .parse::<f64>()
             .unwrap_or(0.0)
             / 1e10
+    }
+
+    /// Inflation API daily mint in DOT, if recorded (DAP-era).
+    pub fn daily_mint_dot(&self) -> Option<f64> {
+        self.daily_mint
+            .as_ref()
+            .map(|v| v.parse::<f64>().unwrap_or(0.0) / 1e10)
     }
 }
 

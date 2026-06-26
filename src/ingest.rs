@@ -36,6 +36,7 @@ pub struct EraPaidRaw {
     pub timestamp: DateTime<Utc>,
     pub amount_paid: u128,
     pub total_issuance: u128,
+    pub daily_mint: Option<u128>,
 }
 
 impl EraPaidRaw {
@@ -44,6 +45,7 @@ impl EraPaidRaw {
             timestamp: self.timestamp.format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
             amount_paid: self.amount_paid.to_string(),
             total_issuance: self.total_issuance.to_string(),
+            daily_mint: self.daily_mint.map(|v| v.to_string()),
             block_number: Some(self.block_number),
         }
     }
@@ -207,6 +209,18 @@ impl Ingestor {
             .await?
             .decode()?;
 
+        // DAP-era issuance comes from the runtime Inflation API; absent pre-v2.3.0.
+        let daily_mint: Option<u128> = if at.spec_version() >= 2_003_000 {
+            self.gate().await;
+            at.runtime_apis()
+                .call(ah::runtime_apis().inflation().experimental_issuance_prediction_info())
+                .await
+                .ok()
+                .map(|i| i.next_mint.0)
+        } else {
+            None
+        };
+
         let timestamp = DateTime::from_timestamp_millis(ts_ms as i64)
             .ok_or_else(|| anyhow!("invalid timestamp {ts_ms} at block #{block}"))?;
 
@@ -216,6 +230,7 @@ impl Ingestor {
             timestamp,
             amount_paid: ep.validator_payout.saturating_add(ep.remainder),
             total_issuance,
+            daily_mint,
         })
     }
 

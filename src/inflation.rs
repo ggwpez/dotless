@@ -134,7 +134,9 @@ impl ChartCache {
                 if ts.date() < cutoff {
                     return None;
                 }
-                let daily_increase = event.amount_paid_dot();
+                // DAP-era: runtime Inflation API daily mint; pre-DAP: amount_paid.
+                let daily_increase =
+                    event.daily_mint_dot().unwrap_or_else(|| event.amount_paid_dot());
                 let issuance = event.total_issuance_dot();
                 let inflation_rate = (daily_increase / issuance) * DAYS_PER_YEAR * 100.0;
                 Some(ChartPoint {
