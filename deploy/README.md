@@ -92,6 +92,17 @@ ansible-playbook playbook.yml --tags rust         # rustup update
 ansible-playbook playbook.yml --tags firewall     # ufw rules
 ```
 
+### Reset server state
+
+`live_events.json` is normally never touched on the server (it's excluded from
+rsync and only seeded when absent). To wipe it and let the ingestor rebuild from
+scratch, run the opt-in `reset` tag — it carries the `never` tag so it cannot
+fire on a normal deploy:
+
+```bash
+ansible-playbook playbook.yml --tags reset        # rm live_events.json + restart dotless
+```
+
 ## After deploy
 
 ```bash

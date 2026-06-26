@@ -207,6 +207,19 @@
       tags: [build]
 
     # ────────────────────────────────────────────────────────────────
+    # 3b. State reset (opt-in only — the `never` tag keeps this out of
+    #     every normal run; it fires only on `--tags reset`).
+    #     Deletes the server's live_events.json and restarts dotless so
+    #     the ingestor rebuilds state from scratch.
+    # ────────────────────────────────────────────────────────────────
+    - name: Remove live_events.json from server (state reset)
+      ansible.builtin.file:
+        path:  "{{ app_state_dir }}/live_events.json"
+        state: absent
+      notify: restart dotless
+      tags: [never, reset]
+
+    # ────────────────────────────────────────────────────────────────
     # 4. systemd unit
     # ────────────────────────────────────────────────────────────────
     - name: Render dotless.service unit

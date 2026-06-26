@@ -55,6 +55,10 @@ deploy-rust:
 deploy-firewall:
     cd deploy && ansible-playbook playbook.yml --tags firewall
 
+# Wipe server state: delete live_events.json and restart dotless to re-seed
+deploy-reset:
+    cd deploy && ansible-playbook playbook.yml --tags reset
+
 # Pass-through: `just deploy-ansible -- --tags caddy --check`
 deploy-ansible *ARGS:
     cd deploy && ansible-playbook playbook.yml {{ARGS}}
