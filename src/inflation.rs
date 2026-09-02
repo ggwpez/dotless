@@ -6,6 +6,12 @@ use crate::data::EraPaid;
 
 const DAYS_PER_YEAR: f64 = 365.25;
 
+/// Asset Hub did not emit daily points on 2026-07-01/02. The next point rolled
+/// the whole interval into 2026-07-03, so expand it back into three chart days.
+const JULY_2026_HICCUP_PREVIOUS_DATE: (i32, u32, u32) = (2026, 6, 30);
+const JULY_2026_HICCUP_DATE: (i32, u32, u32) = (2026, 7, 3);
+const JULY_2026_HICCUP_DAYS: i64 = 3;
+
 /// Pre-2026-03-14: 120M DOT/year
 const OLD_DAILY_ISSUANCE: f64 = 120_000_000.0 / DAYS_PER_YEAR;
 
@@ -166,6 +172,51 @@ impl ChartCache {
             };
             let daily_increase = event.amount_paid_dot() + buffer_delta;
 
+            // The chain paused across July 1/2 and the July 3 EraPaid point
+            // contains the accumulated payout. Keep the raw event untouched,
+            // but present it as three equal daily amounts on the chart. Supply
+            // is interpolated between the real June 30 and July 3 snapshots so
+            // the last synthetic point still lands on the measured value.
+            let previous_event = i.checked_sub(1).and_then(|j| events.get(j));
+            let is_july_2026_hiccup = ts.date()
+                == NaiveDate::from_ymd_opt(
+                    JULY_2026_HICCUP_DATE.0,
+                    JULY_2026_HICCUP_DATE.1,
+                    JULY_2026_HICCUP_DATE.2,
+                )
+                .unwrap()
+                && previous_event.is_some_and(|previous| {
+                    parse_timestamp(&previous.timestamp).date()
+                        == NaiveDate::from_ymd_opt(
+                            JULY_2026_HICCUP_PREVIOUS_DATE.0,
+                            JULY_2026_HICCUP_PREVIOUS_DATE.1,
+                            JULY_2026_HICCUP_PREVIOUS_DATE.2,
+                        )
+                        .unwrap()
+                });
+
+            if is_july_2026_hiccup {
+                let previous_supply = previous_event.unwrap().total_issuance_dot();
+                let issuance_per_day = daily_increase / JULY_2026_HICCUP_DAYS as f64;
+
+                for day in 1..=JULY_2026_HICCUP_DAYS {
+                    let synthetic_ts = ts - TimeDelta::days(JULY_2026_HICCUP_DAYS - day);
+                    let fraction = day as f64 / JULY_2026_HICCUP_DAYS as f64;
+                    let synthetic_supply =
+                        previous_supply + (issuance - previous_supply) * fraction;
+                    let inflation_rate =
+                        (issuance_per_day / synthetic_supply) * DAYS_PER_YEAR * 100.0;
+                    points.push(ChartPoint {
+                        timestamp: synthetic_ts.format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
+                        inflation_rate,
+                        supply: synthetic_supply,
+                        daily_issuance: issuance_per_day,
+                        is_projected: false,
+                    });
+                }
+                continue;
+            }
+
             let inflation_rate = (daily_increase / issuance) * DAYS_PER_YEAR * 100.0;
             points.push(ChartPoint {
                 timestamp: event.timestamp.clone(),
@@ -238,4 +289,83 @@ fn parse_timestamp(ts: &str) -> NaiveDateTime {
         .or_else(|_| NaiveDateTime::parse_from_str(ts, "%Y-%m-%dT%H:%M:%SZ"))
         .or_else(|_| NaiveDateTime::parse_from_str(ts, "%Y-%m-%dT%H:%M:%S%.f"))
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn event(timestamp: &str, amount_paid: &str, total_issuance: &str, buffer: &str) -> EraPaid {
+        serde_json::from_value(serde_json::json!({
+            "timestamp": timestamp,
+            "amountPaid": amount_paid,
+            "totalIssuance": total_issuance,
+            "bufferBalance": buffer,
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn july_2026_hiccup_is_split_over_three_days() {
+        let events = vec![
+            event(
+                "2026-06-30T03:36:00.000Z",
+                "1129249371810530",
+                "16910339889981949009",
+                "4314622581276708",
+            ),
+            event(
+                "2026-07-03T11:36:00.000Z",
+                "3460493443485183",
+                "16915430677085715989",
+                "5959353715934388",
+            ),
+        ];
+
+        let points = ChartCache::historical_from_events(&events);
+        let smoothed = &points[1..];
+        assert_eq!(smoothed.len(), 3);
+        assert_eq!(smoothed[0].timestamp, "2026-07-01T11:36:00.000Z");
+        assert_eq!(smoothed[1].timestamp, "2026-07-02T11:36:00.000Z");
+        assert_eq!(smoothed[2].timestamp, "2026-07-03T11:36:00.000Z");
+
+        let recorded_increase = events[1].amount_paid_dot()
+            + events[1].buffer_balance_dot().unwrap()
+            - events[0].buffer_balance_dot().unwrap();
+        for point in smoothed {
+            assert!((point.daily_issuance - recorded_increase / 3.0).abs() < 1e-9);
+        }
+        assert!(
+            (smoothed
+                .iter()
+                .map(|point| point.daily_issuance)
+                .sum::<f64>()
+                - recorded_increase)
+                .abs()
+                < 1e-9
+        );
+        assert!((smoothed[2].supply - events[1].total_issuance_dot()).abs() < 1e-9);
+    }
+
+    #[test]
+    fn july_3_is_not_split_when_the_preceding_day_exists() {
+        let events = vec![
+            event(
+                "2026-07-02T11:36:00.000Z",
+                "1038522951078438",
+                "16913901284567200000",
+                "5465881524373014",
+            ),
+            event(
+                "2026-07-03T11:36:00.000Z",
+                "1038522951078438",
+                "16915430677085715989",
+                "5959353715934388",
+            ),
+        ];
+
+        let points = ChartCache::historical_from_events(&events);
+        assert_eq!(points.len(), 2);
+        assert_eq!(points[1].timestamp, events[1].timestamp);
+    }
 }
