@@ -94,6 +94,30 @@ body {
     background: rgba(230, 0, 122, 0.2);
 }
 
+.counter-card {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 18px 24px;
+    border: 1px solid rgba(230, 0, 122, 0.5);
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(230, 0, 122, 0.2);
+}
+
+.counter-label,
+.counter-unit {
+    color: #aaa;
+    font-size: 14px;
+}
+
+.counter-value {
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 800;
+}
+
 .chart-card {
     background: rgba(0, 0, 0, 0.8);
     border: 1px solid rgba(230, 0, 122, 0.5);

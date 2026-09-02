@@ -28,6 +28,12 @@
             <button class="toggle-btn" data-years="50">50 Years</button>
         </div>
 
+        <div class="counter-card">
+            <span class="counter-label">Total DOT Burned</span>
+            <span class="counter-value" id="burnCounter">&mdash;</span>
+            <span class="counter-unit">DOT</span>
+        </div>
+
         <div class="chart-card">
             <canvas id="inflationChart"></canvas>
         </div>
@@ -229,6 +235,11 @@
         const dapEl = document.getElementById('dapBuffer');
         if (dapBuffer) {
             dapEl.textContent = 'DAP buffer: ' + formatNumber(Number(dapBuffer)) + ' DOT';
+        }
+        // Burn-address balance, snapshotted with the approximately-daily graph data.
+        const burnBalance = '{{ burn_balance_dot }}';
+        if (burnBalance) {
+            document.getElementById('burnCounter').textContent = formatNumber(Number(burnBalance));
         }
     </script>
 </body>

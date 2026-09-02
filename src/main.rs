@@ -25,6 +25,8 @@ struct IndexTemplate {
     last_event_ts: String,
     /// Latest recorded DAP buffer balance in DOT (plain number), or empty.
     dap_buffer_dot: String,
+    /// Latest recorded balance of the configured burn address in DOT.
+    burn_balance_dot: String,
 }
 
 async fn index_handler(
@@ -37,7 +39,7 @@ async fn index_handler(
         .collect();
     let all_chart_data_json = serde_json::to_string(&all).unwrap_or_else(|_| "{}".into());
 
-    let (last_event_ts, dap_buffer_dot) = {
+    let (last_event_ts, dap_buffer_dot, burn_balance_dot) = {
         let events = state.cached_events.read().await;
         let ts = events.last().map(|e| e.timestamp.clone()).unwrap_or_default();
         let buffer = events
@@ -46,10 +48,21 @@ async fn index_handler(
             .find_map(|e| e.buffer_balance_dot())
             .map(|v| format!("{v}"))
             .unwrap_or_default();
-        (ts, buffer)
+        let burn = events
+            .iter()
+            .rev()
+            .find_map(|e| e.burn_balance_dot())
+            .map(|v| format!("{v}"))
+            .unwrap_or_default();
+        (ts, buffer, burn)
     };
 
-    let template = IndexTemplate { all_chart_data_json, last_event_ts, dap_buffer_dot };
+    let template = IndexTemplate {
+        all_chart_data_json,
+        last_event_ts,
+        dap_buffer_dot,
+        burn_balance_dot,
+    };
     Html(template.render().unwrap_or_else(|e| format!("Template error: {e}")))
 }
 

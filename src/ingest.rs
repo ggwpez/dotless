@@ -47,6 +47,8 @@ pub struct EraPaidRaw {
     /// DAP buffer total balance (free + reserved) at the boundary block, `None` if
     /// the read failed (non-fatal — issuance data is still recorded).
     pub buffer_balance: Option<u128>,
+    /// Configured burn-address total balance at the boundary block.
+    pub burn_balance: Option<u128>,
 }
 
 impl EraPaidRaw {
@@ -57,6 +59,7 @@ impl EraPaidRaw {
             total_issuance: self.total_issuance.to_string(),
             block_number: Some(self.block_number),
             buffer_balance: self.buffer_balance.map(|b| b.to_string()),
+            burn_balance: self.burn_balance.map(|b| b.to_string()),
         }
     }
 }
@@ -69,6 +72,8 @@ pub struct Ingestor {
     last_request: tokio::sync::Mutex<Option<tokio::time::Instant>>,
     /// DAP buffer account, decoded from `DAP_BUFFER_SS58` once at connect.
     buffer_account: AccountId32,
+    /// Optional until the operator supplies `BURN_ADDRESS`.
+    burn_account: Option<AccountId32>,
 }
 
 impl Ingestor {
@@ -85,12 +90,21 @@ impl Ingestor {
 
         let buffer_account = AccountId32::from_str(DAP_BUFFER_SS58)
             .map_err(|e| anyhow!("parsing DAP buffer account {DAP_BUFFER_SS58}: {e:?}"))?;
+        let burn_account = std::env::var("BURN_ADDRESS")
+            .ok()
+            .filter(|s| !s.trim().is_empty())
+            .map(|address| {
+                AccountId32::from_str(&address)
+                    .map_err(|e| anyhow!("parsing BURN_ADDRESS={address:?}: {e:?}"))
+            })
+            .transpose()?;
 
         Ok(Self {
             api,
             min_interval: Duration::from_millis(interval_ms),
             last_request: tokio::sync::Mutex::new(None),
             buffer_account,
+            burn_account,
         })
     }
 
@@ -230,7 +244,10 @@ impl Ingestor {
         self.gate().await;
         let buffer_balance = match at
             .storage()
-            .fetch(ah::storage().system().account(), (self.buffer_account.clone(),))
+            .fetch(
+                ah::storage().system().account(),
+                (self.buffer_account.clone(),),
+            )
             .await
         {
             Ok(v) => match v.decode() {
@@ -244,6 +261,32 @@ impl Ingestor {
                 tracing::warn!("ingest: fetching DAP buffer balance at #{block} failed: {e:#}");
                 None
             }
+        };
+
+        // Snapshot the burn address on the same approximately-daily boundary as
+        // the graph data. This makes the persisted value useful for a future
+        // historical chart without introducing a second timeline or state file.
+        let burn_balance = if let Some(account) = &self.burn_account {
+            self.gate().await;
+            match at
+                .storage()
+                .fetch(ah::storage().system().account(), (account.clone(),))
+                .await
+            {
+                Ok(v) => match v.decode() {
+                    Ok(info) => Some(info.data.free.saturating_add(info.data.reserved)),
+                    Err(e) => {
+                        tracing::warn!("ingest: decoding burn balance at #{block} failed: {e:#}");
+                        None
+                    }
+                },
+                Err(e) => {
+                    tracing::warn!("ingest: fetching burn balance at #{block} failed: {e:#}");
+                    None
+                }
+            }
+        } else {
+            None
         };
 
         let timestamp = DateTime::from_timestamp_millis(ts_ms as i64)
@@ -261,6 +304,7 @@ impl Ingestor {
             amount_paid: ep.validator_payout.saturating_add(ep.remainder),
             total_issuance,
             buffer_balance,
+            burn_balance,
         })
     }
 
@@ -345,6 +389,7 @@ async fn run_cycle(state: &Arc<crate::AppState>) -> Result<()> {
         done += 1;
         let era_index = raw.era_index;
         let buffer_dot = raw.buffer_balance.map(|b| b as f64 / 1e10);
+        let burn_dot = raw.burn_balance.map(|b| b as f64 / 1e10);
 
         let mut events = state.cached_events.write().await;
         events.push(raw.into_event());
@@ -360,7 +405,8 @@ async fn run_cycle(state: &Arc<crate::AppState>) -> Result<()> {
             None => "DAP buffer unavailable".to_string(),
         };
         tracing::info!(
-            "ingest: era {era_index} @ #{tv} ({done}/{total}) -> {path} ({persisted} events); {buffer_str}"
+            "ingest: era {era_index} @ #{tv} ({done}/{total}) -> {path} ({persisted} events); {buffer_str}; burn {}",
+            burn_dot.map(|b| format!("{b:.0} DOT")).unwrap_or_else(|| "unavailable".into())
         );
     }
 

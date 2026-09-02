@@ -16,6 +16,11 @@ pub struct EraPaid {
     /// (≈daily). None for frozen history / events ingested before buffer monitoring.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub buffer_balance: Option<String>,
+    /// Total balance (plancks, free + reserved) held by the configured burn
+    /// address at this era boundary. Retained on every daily record so it can
+    /// be graphed later as well as used for the current burn counter.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub burn_balance: Option<String>,
 }
 
 impl EraPaid {
@@ -38,6 +43,14 @@ impl EraPaid {
     /// DAP buffer account total balance in DOT (divided by 1e10), if recorded.
     pub fn buffer_balance_dot(&self) -> Option<f64> {
         self.buffer_balance
+            .as_ref()
+            .and_then(|s| s.parse::<f64>().ok())
+            .map(|v| v / 1e10)
+    }
+
+    /// Configured burn-address total balance in DOT (divided by 1e10), if recorded.
+    pub fn burn_balance_dot(&self) -> Option<f64> {
+        self.burn_balance
             .as_ref()
             .and_then(|s| s.parse::<f64>().ok())
             .map(|v| v / 1e10)

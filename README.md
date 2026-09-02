@@ -2,6 +2,10 @@
 
 Polkadot inflation model visualizer live at [dotless.xyz](https://dotless.xyz).
 
+Set `BURN_ADDRESS` to an Asset Hub Polkadot SS58 address to snapshot its total
+balance at each approximately-daily era boundary. The current balance is shown
+as the burn counter and each historical balance is retained in `live_events.json`.
+
 ![preview](static/preview.jpg)
 
 ## New Polkadot Issuance Model Is Live
