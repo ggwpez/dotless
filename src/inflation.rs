@@ -7,10 +7,10 @@ use crate::data::EraPaid;
 const DAYS_PER_YEAR: f64 = 365.25;
 
 /// Asset Hub did not emit daily points on 2026-07-01/02. The next point rolled
-/// the whole interval into 2026-07-03, so expand it back into three chart days.
+/// the whole interval into 2026-07-03, so expand it back across the real gap.
 const JULY_2026_HICCUP_PREVIOUS_DATE: (i32, u32, u32) = (2026, 6, 30);
 const JULY_2026_HICCUP_DATE: (i32, u32, u32) = (2026, 7, 3);
-const JULY_2026_HICCUP_DAYS: i64 = 3;
+const SECONDS_PER_DAY: f64 = 86_400.0;
 
 /// Pre-2026-03-14: 120M DOT/year
 const OLD_DAILY_ISSUANCE: f64 = 120_000_000.0 / DAYS_PER_YEAR;
@@ -174,9 +174,9 @@ impl ChartCache {
 
             // The chain paused across July 1/2 and the July 3 EraPaid point
             // contains the accumulated payout. Keep the raw event untouched,
-            // but present it as three equal daily amounts on the chart. Supply
-            // is interpolated between the real June 30 and July 3 snapshots so
-            // the last synthetic point still lands on the measured value.
+            // but present it at a daily rate over the real 80-hour interval.
+            // Emit each full-day checkpoint and the final eight-hour residual;
+            // supply is interpolated so the endpoint remains the measured value.
             let previous_event = i.checked_sub(1).and_then(|j| events.get(j));
             let is_july_2026_hiccup = ts.date()
                 == NaiveDate::from_ymd_opt(
@@ -196,12 +196,17 @@ impl ChartCache {
                 });
 
             if is_july_2026_hiccup {
-                let previous_supply = previous_event.unwrap().total_issuance_dot();
-                let issuance_per_day = daily_increase / JULY_2026_HICCUP_DAYS as f64;
+                let previous_event = previous_event.unwrap();
+                let previous_ts = parse_timestamp(&previous_event.timestamp);
+                let previous_supply = previous_event.total_issuance_dot();
+                let elapsed = ts - previous_ts;
+                let elapsed_seconds = elapsed.num_seconds() as f64;
+                let issuance_per_day = daily_increase / (elapsed_seconds / SECONDS_PER_DAY);
+                let full_days = elapsed.num_days();
 
-                for day in 1..=JULY_2026_HICCUP_DAYS {
-                    let synthetic_ts = ts - TimeDelta::days(JULY_2026_HICCUP_DAYS - day);
-                    let fraction = day as f64 / JULY_2026_HICCUP_DAYS as f64;
+                for day in 1..=full_days {
+                    let synthetic_ts = previous_ts + TimeDelta::days(day);
+                    let fraction = (day as f64 * SECONDS_PER_DAY) / elapsed_seconds;
                     let synthetic_supply =
                         previous_supply + (issuance - previous_supply) * fraction;
                     let inflation_rate =
@@ -210,6 +215,16 @@ impl ChartCache {
                         timestamp: synthetic_ts.format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
                         inflation_rate,
                         supply: synthetic_supply,
+                        daily_issuance: issuance_per_day,
+                        is_projected: false,
+                    });
+                }
+                if previous_ts + TimeDelta::days(full_days) < ts {
+                    let inflation_rate = (issuance_per_day / issuance) * DAYS_PER_YEAR * 100.0;
+                    points.push(ChartPoint {
+                        timestamp: event.timestamp.clone(),
+                        inflation_rate,
+                        supply: issuance,
                         daily_issuance: issuance_per_day,
                         is_projected: false,
                     });
@@ -306,7 +321,7 @@ mod tests {
     }
 
     #[test]
-    fn july_2026_hiccup_is_split_over_three_days() {
+    fn july_2026_hiccup_is_normalized_over_the_actual_elapsed_time() {
         let events = vec![
             event(
                 "2026-06-30T03:36:00.000Z",
@@ -320,31 +335,36 @@ mod tests {
                 "16915430677085715989",
                 "5959353715934388",
             ),
+            event(
+                "2026-07-04T11:36:00.000Z",
+                "1037946154104780",
+                "16916961623469643904",
+                "6452597764295761",
+            ),
         ];
 
         let points = ChartCache::historical_from_events(&events);
-        let smoothed = &points[1..];
-        assert_eq!(smoothed.len(), 3);
-        assert_eq!(smoothed[0].timestamp, "2026-07-01T11:36:00.000Z");
-        assert_eq!(smoothed[1].timestamp, "2026-07-02T11:36:00.000Z");
-        assert_eq!(smoothed[2].timestamp, "2026-07-03T11:36:00.000Z");
+        let smoothed = &points[1..5];
+        assert_eq!(smoothed.len(), 4);
+        assert_eq!(smoothed[0].timestamp, "2026-07-01T03:36:00.000Z");
+        assert_eq!(smoothed[1].timestamp, "2026-07-02T03:36:00.000Z");
+        assert_eq!(smoothed[2].timestamp, "2026-07-03T03:36:00.000Z");
+        assert_eq!(smoothed[3].timestamp, events[1].timestamp);
 
         let recorded_increase = events[1].amount_paid_dot()
             + events[1].buffer_balance_dot().unwrap()
             - events[0].buffer_balance_dot().unwrap();
+        let elapsed_days = 80.0 / 24.0;
+        let expected_daily = recorded_increase / elapsed_days;
         for point in smoothed {
-            assert!((point.daily_issuance - recorded_increase / 3.0).abs() < 1e-9);
+            assert!((point.daily_issuance - expected_daily).abs() < 1e-9);
         }
-        assert!(
-            (smoothed
-                .iter()
-                .map(|point| point.daily_issuance)
-                .sum::<f64>()
-                - recorded_increase)
-                .abs()
-                < 1e-9
-        );
-        assert!((smoothed[2].supply - events[1].total_issuance_dot()).abs() < 1e-9);
+        assert!((smoothed[3].supply - events[1].total_issuance_dot()).abs() < 1e-9);
+
+        let july_4 = &points[5];
+        let relative_step =
+            (smoothed[3].daily_issuance - july_4.daily_issuance).abs() / july_4.daily_issuance;
+        assert!(relative_step < 0.001, "the adjusted rate stays smooth");
     }
 
     #[test]
