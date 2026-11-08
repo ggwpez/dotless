@@ -1,6 +1,7 @@
 # Deploy
 
-Ansible playbook that deploys `dotless` to a Debian/Ubuntu host behind Caddy.
+Ansible playbook that deploys `dotless` to a Debian/Ubuntu host behind the
+host's Docker Caddy (container `caddy`, managed outside this repository).
 
 ## What it does
 
@@ -15,10 +16,10 @@ Ansible playbook that deploys `dotless` to a Debian/Ubuntu host behind Caddy.
 7. Seeds `/var/lib/dotless/live_events.json` from the local file **only if
    absent** — subsequent runs never clobber server state.
 8. Renders a sandboxed `dotless.service` systemd unit and starts it.
-9. Installs Caddy from the official Cloudsmith repo.
-10. Renders a `Caddyfile` reverse-proxying `dotless.xyz` (and redirecting
-    `www.dotless.xyz`) to `127.0.0.1:8080` with auto Let's Encrypt TLS.
-11. Opens `80/tcp` and `443/tcp` in `ufw`.
+9. Installs the `dotless.xyz` Caddy site (redirecting `www.dotless.xyz`) to
+   `/etc/caddy/sites/dotless.xyz.caddy`, validates the complete Caddy
+   configuration in the `caddy` container and reloads it.
+10. Opens `80/tcp` and `443/tcp` in `ufw`.
 
 The playbook is idempotent — re-run it to ship updates.
 
@@ -31,7 +32,7 @@ deploy/
 ├── requirements.yml       # ansible.posix, community.general
 ├── playbook.yml
 └── templates/
-    ├── Caddyfile.j2
+    ├── dotless.caddy.j2
     └── dotless.service.j2
 ```
 
@@ -45,9 +46,8 @@ On the server:
 ├── .cargo/  .rustup/  # toolchain, owned by dotless user
 /etc/dotless/env       # optional override file (EnvironmentFile=-)
 /etc/systemd/system/dotless.service
-/etc/caddy/Caddyfile
+/etc/caddy/sites/dotless.xyz.caddy  # imported by the host's /etc/caddy/Caddyfile
 /var/lib/dotless/live_events.json  # state (writable; ReadWritePaths in unit)
-/var/log/caddy/access.log
 ```
 
 ## One-time setup (controller)
@@ -85,7 +85,7 @@ and the on-server `target/` cache.
 Each major section is tagged. Examples:
 
 ```bash
-ansible-playbook playbook.yml --tags caddy        # re-render Caddyfile + reload
+ansible-playbook playbook.yml --tags caddy        # re-render the site + reload Caddy
 ansible-playbook playbook.yml --tags build        # rsync + cargo build + restart
 ansible-playbook playbook.yml --tags service      # re-render systemd unit
 ansible-playbook playbook.yml --tags rust         # rustup update
@@ -106,7 +106,8 @@ ansible-playbook playbook.yml --tags reset        # rm live_events.json + restar
 ## After deploy
 
 ```bash
-ssh server systemctl status dotless caddy
+ssh server systemctl status dotless
+ssh server sudo docker logs --tail 50 caddy
 ssh server journalctl -u dotless -f
 ```
 
