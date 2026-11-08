@@ -21,9 +21,6 @@
     cargo_home:       /opt/dotless/.cargo
     rust_channel:     stable
 
-    # --- Caddy ---
-    caddy_acme_email: oliver.tale-yazdi@parity.io
-
     # Resolved on the controller. `playbook_dir` is .../dotless/deploy.
     local_project_root: "{{ playbook_dir | dirname }}"
 
@@ -42,7 +39,7 @@
       ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 3600
-      tags: [prep, caddy]
+      tags: [prep]
 
     - name: Install base packages
       ansible.builtin.apt:
@@ -60,7 +57,7 @@
           - pkg-config
           - rsync
         state: present
-      tags: [prep, caddy]
+      tags: [prep]
 
     - name: Create app system user "{{ app_user }}"
       ansible.builtin.user:
@@ -241,66 +238,22 @@
       tags: [service]
 
     # ────────────────────────────────────────────────────────────────
-    # 5. Caddy (reverse proxy + auto-TLS)
+    # 5. Caddy site. The host's Docker Caddy (container `caddy`, managed
+    #    outside this repository) imports /etc/caddy/sites/*.caddy.
     # ────────────────────────────────────────────────────────────────
-    - name: Ensure /etc/apt/keyrings exists
-      ansible.builtin.file:
-        path:  /etc/apt/keyrings
-        state: directory
-        owner: root
-        group: root
-        mode:  "0755"
-      tags: [caddy]
-
-    - name: Install Caddy GPG key (armored)
-      ansible.builtin.get_url:
-        url:   https://dl.cloudsmith.io/public/caddy/stable/gpg.key
-        dest:  /etc/apt/keyrings/caddy-stable.asc
-        owner: root
-        group: root
-        mode:  "0644"
-      tags: [caddy]
-
-    - name: Add Caddy apt repository
-      ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/caddy-stable.asc] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main"
-        filename: caddy-stable
-        state: present
-        update_cache: true
-      tags: [caddy]
-
-    - name: Install Caddy
-      ansible.builtin.apt:
-        name:  caddy
-        state: present
-      tags: [caddy]
-
-    # Caddy logs go to stderr → systemd-journal (no file logging),
-    # so we don't need /var/log/caddy. Remove any stale access.log
-    # left over from earlier configurations (would otherwise be owned
-    # by root and break reloads if file logging is ever re-enabled).
-    - name: Remove stale Caddy access log (legacy)
-      ansible.builtin.file:
-        path:  /var/log/caddy/access.log
-        state: absent
-      tags: [caddy]
-
-    - name: Render Caddyfile
+    - name: Install the dotless Caddy site
       ansible.builtin.template:
-        src:   Caddyfile.j2
-        dest:  /etc/caddy/Caddyfile
+        src:   dotless.caddy.j2
+        dest:  /etc/caddy/sites/dotless.xyz.caddy
         owner: root
         group: root
         mode:  "0644"
-        validate: "caddy validate --adapter caddyfile --config %s"
       notify: reload caddy
       tags: [caddy]
 
-    - name: Enable and start Caddy
-      ansible.builtin.systemd:
-        name:    caddy
-        enabled: true
-        state:   started
+    - name: Validate the complete Caddy configuration
+      ansible.builtin.command: docker exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      changed_when: false
       tags: [caddy]
 
     # ────────────────────────────────────────────────────────────────
@@ -324,6 +277,4 @@
         daemon_reload: true
 
     - name: reload caddy
-      ansible.builtin.systemd:
-        name:  caddy
-        state: reloaded
+      ansible.builtin.command: docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile

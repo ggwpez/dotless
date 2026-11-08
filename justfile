@@ -39,7 +39,7 @@ deploy:
 deploy-build:
     cd deploy && ansible-playbook playbook.yml --tags build
 
-# Re-render Caddyfile and reload Caddy
+# Re-render the Caddy site and reload Caddy
 deploy-caddy:
     cd deploy && ansible-playbook playbook.yml --tags caddy
 
@@ -69,9 +69,9 @@ deploy-ansible *ARGS:
 logs:
     ssh server sudo journalctl -u dotless -f
 
-# Tail caddy logs (access + errors)
+# Tail caddy logs (access + errors, all sites on the host)
 logs-caddy:
-    ssh server sudo journalctl -u caddy -f
+    ssh server sudo docker logs -f --tail 100 caddy
 
 # Verify the app is reachable end-to-end (localhost → caddy → public IP)
 verify:
@@ -88,15 +88,15 @@ verify:
 
 # Service status (dotless + caddy)
 status:
-    ssh server "systemctl status dotless caddy --no-pager"
+    ssh server "systemctl status dotless --no-pager; sudo docker ps --filter name=^caddy$"
 
 # Restart dotless without redeploy
 restart:
     ssh server sudo systemctl restart dotless
 
-# Restart Caddy (clears ACME backoff so it retries cert issuance)
+# Restart Caddy (clears ACME backoff; briefly interrupts every site on the host)
 restart-caddy:
-    ssh server sudo systemctl restart caddy
+    ssh server sudo docker restart caddy
 
 # SSH in
 shell:
